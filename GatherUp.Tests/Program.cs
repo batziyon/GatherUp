@@ -10,20 +10,12 @@ using GatherUp.Infrastructure.Data;
 
 namespace GatherUp.Tests
 {
-    /// <summary>
-    /// End-to-end integration test harness for GatherUp event management system.
-    /// Tests complete workflows: event creation, participant management, polls, payments, vendors, receipts, and notifications.
-    /// שלב ב' — עובד מול XmlRepository (קבצי XML על הדיסק) בלבד.
-    /// </summary>
     class Program
     {
         private static List<string> TestResults = new();
         private static int PassedTests  = 0;
         private static int FailedTests  = 0;
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Container נוח לכל ה-repositories
-        // ─────────────────────────────────────────────────────────────────────
         record Repos(
             IRepository<Event>            Events,
             IRepository<Participant>      Participants,
@@ -34,9 +26,6 @@ namespace GatherUp.Tests
             IRepository<Receipt>          Receipts
         );
 
-        // ─────────────────────────────────────────────────────────────────────
-        // שלב ב' דרישה 4.2 — פונקציה שיוצרת XmlRepository לכל הישויות
-        // ─────────────────────────────────────────────────────────────────────
         static Repos CreateXmlRepositories(string xmlFolder, string receiptsFolder)
         {
             return new Repos(
@@ -50,9 +39,6 @@ namespace GatherUp.Tests
             );
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // שלב ב' דרישה 4.1 — פונקציה שיוצרת MemoryRepository (לבדיקות מבודדות)
-        // ─────────────────────────────────────────────────────────────────────
         static Repos CreateMemoryRepositories(string receiptsFolder)
         {
             return new Repos(
@@ -66,9 +52,6 @@ namespace GatherUp.Tests
             );
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // שלב ב' דרישה 4.3 — אתחול נתוני seed דרך XmlRepository (כותב לדיסק)
-        // ─────────────────────────────────────────────────────────────────────
         static async Task InitWithXml(Repos repos)
         {
             await InitializeData.InitializeAsync(
@@ -76,9 +59,6 @@ namespace GatherUp.Tests
                 repos.Polls,  repos.Managers,     repos.Hosts);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // פונקציה מקבילה — אתחול נתוני seed דרך MemoryRepository (בזיכרון בלבד)
-        // ─────────────────────────────────────────────────────────────────────
         static async Task InitWithMemory(Repos repos)
         {
             await InitializeData.InitializeAsync(
@@ -86,9 +66,6 @@ namespace GatherUp.Tests
                 repos.Polls,  repos.Managers,     repos.Hosts);
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // MAIN
-        // ─────────────────────────────────────────────────────────────────────
         static async Task Main(string[] args)
         {
             string baseDir        = AppDomain.CurrentDomain.BaseDirectory;
@@ -96,16 +73,13 @@ namespace GatherUp.Tests
             string receiptsFolder = Path.Combine(baseDir, "ReceiptsStorage");
             string emailsFolder   = Path.Combine(baseDir, "EmailsLog");
 
-            // שלב ב' דרישה 4.4 — שימוש ב-XmlRepository עם ניתוב לתיקיית ה-XML
             var repos = CreateXmlRepositories(xmlFolder, receiptsFolder);
 
-            // אתחול seed רק אם הקבצים לא קיימים עדיין
             if (!File.Exists(Path.Combine(xmlFolder, "Events.xml")))
                 await InitWithXml(repos);
 
             var emailService = new FileEmailService(emailsFolder);
 
-            // יצירת שכבת BL — מקבלת repositories דרך ה-interface (ניתוק מלא)
             var notifier           = new EventNotifierService(repos.Participants, repos.Managers, repos.Events, emailService);
             var participantService = new ParticipantService(repos.Participants, repos.Events, emailService, notifier);
             var financeService     = new FinanceService(repos.Participants, repos.Vendors, repos.Receipts, repos.Events, emailService, notifier);
@@ -115,9 +89,6 @@ namespace GatherUp.Tests
 
             try
             {
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 1: Create Event
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 1: Create Event");
                 var newEvent = new Event
                 {
@@ -137,9 +108,6 @@ namespace GatherUp.Tests
                 Assert(createdEvent?.Status == EventStatus.Planning,     "Event status is Planning",        "Event status incorrect");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 2: Create Poll
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 2: Create Poll");
                 var poll = await pollService.CreatePollAsync(999, "Test Poll",
                     new List<(string, List<string>)>
@@ -153,9 +121,6 @@ namespace GatherUp.Tests
                 Assert(eventWithPoll?.PollIds.Contains(poll!.Id) ?? false, "Poll linked to event", "Poll event linkage failed");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 3: Add Participants (שלב ב' — 3 משתתפים נוספים לדיסק)
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 3: Add Participants");
                 var p1 = new Participant { Id = 2001, Name = "Test User 1", Email = "test1@example.com",
                     MailingPreferences = new List<MailingPreference> { MailingPreference.EventChanges } };
@@ -174,28 +139,20 @@ namespace GatherUp.Tests
                 Assert(evt?.ParticipantIds.Contains(2004) ?? false, "Participant 3 added to event", "Participant 3 not in event");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 4: Submit Poll Responses (שלב ב' — שינוי תשובה בסקר)
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 4: Submit & Change Poll Responses");
                 await pollService.SubmitVoteAsync(poll!.Id, 1, 2001, "Option A");
                 await pollService.SubmitVoteAsync(poll!.Id, 2, 2001, "10:00");
                 await pollService.SubmitVoteAsync(poll!.Id, 1, 2002, "Option B");
                 await pollService.SubmitVoteAsync(poll!.Id, 2, 2002, "15:00");
-                // שינוי תשובה — p1 מחליף מ-"Option A" ל-"Option B"
                 await pollService.SubmitVoteAsync(poll!.Id, 1, 2001, "Option B");
                 var pollResults = await pollService.GetPollResultsAsync(poll!.Id);
                 Assert(pollResults != null, "Poll results retrieved", "Poll results retrieval failed");
                 Assert((pollResults?.QuestionResults.Count() ?? 0) == 2, "Poll has results for 2 questions", "Poll results count incorrect");
-                // וידוא שהתשובה שונתה — Option B צריך להיות בשימוש ע"י שניים
                 var q1Result   = pollResults!.QuestionResults.First();
                 var optBCount  = q1Result.OptionStats.FirstOrDefault(s => s.Option == "Option B").Count;
                 Assert(optBCount == 2, "Vote change recorded (Option B has 2 votes)", "Vote change not recorded");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 5: Finalize Event
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 5: Finalize Event");
                 var finalEvent = await repos.Events.GetByIdAsync(999);
                 finalEvent.Status = EventStatus.Finalized;
@@ -204,9 +161,6 @@ namespace GatherUp.Tests
                 Assert(finalizedEvent?.Status == EventStatus.Finalized, "Event finalized successfully", "Event finalization failed");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 6: Send Invitations
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 6: Send Invitations");
                 var inviteEvent = new Event
                 {
@@ -232,9 +186,6 @@ namespace GatherUp.Tests
                 Assert(inviteSentEvent.Status == EventStatus.InvitationsSent, "Invitations sent status updated", "Invitation status not updated");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 7: Confirm Attendance (RSVP)
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 7: Register Participants (RSVP)");
                 await participantService.ConfirmAttendanceAsync(2001, 999, isAttending: true,
                     new List<MailingPreference> { MailingPreference.EventChanges, MailingPreference.AttendanceConfirmed });
@@ -248,9 +199,6 @@ namespace GatherUp.Tests
                     "Participant 1 has AttendanceConfirmed pref", "AttendanceConfirmed preference not set");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 8: Record Payments
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 8: Record Payments");
                 await financeService.RegisterPaymentAsync(2001, 999, 150);
                 await financeService.RegisterPaymentAsync(2002, 999, 150);
@@ -262,9 +210,6 @@ namespace GatherUp.Tests
                 Assert(p2Payment.AmountContributed == 150,    "Participant 2 amount correct",   "Participant 2 amount incorrect");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 9: Add Vendors
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 9: Add Vendors");
                 var vendor1 = await financeService.AddVendorToEventAsync(999, "Catering",    800);
                 var vendor2 = await financeService.AddVendorToEventAsync(999, "Decorations", 500);
@@ -274,12 +219,9 @@ namespace GatherUp.Tests
                 Assert(vendor2?.AmountOwed == 500,        "Vendor 2 debt correct", "Vendor 2 debt incorrect");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 10: Upload Receipt + קובץ פיזי (שלב ב' — ודא העתקה לתיקייה)
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 10: Upload Receipts");
                 string dummyFile = Path.Combine(baseDir, "receipt_e2e.txt");
-                File.WriteAllText(dummyFile, "Receipt #RCP-E2E-001\nCatering services: 800₪");
+                File.WriteAllText(dummyFile, "Receipt #RCP-E2E-001\nCatering services: 800");
 
                 var receipt = new Receipt
                 {
@@ -296,14 +238,10 @@ namespace GatherUp.Tests
                 Assert(vendor1Check?.AmountOwed == 0,    "Vendor 1 debt cleared by receipt", "Vendor 1 debt not cleared");
                 Assert(vendor1Check?.IsPaid     == true, "Vendor 1 marked as paid",          "Vendor 1 not marked paid");
 
-                // ודא שהקובץ הועתק לתיקיית ReceiptsStorage (שלב ב' — דרישת העתקה פיזית)
                 var copiedFiles = Directory.GetFiles(receiptsFolder);
                 Assert(copiedFiles.Length > 0, "Receipt file copied to ReceiptsStorage", "Receipt file not copied");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // STEP 11: Notifications
-                // ═══════════════════════════════════════════════════════════════
                 Print("STEP 11: Send Notifications (Integrated)");
                 string emailLog = Path.Combine(emailsFolder, "emails.log");
                 Assert(File.Exists(emailLog), "Email log exists", "Email log not created");
@@ -313,22 +251,16 @@ namespace GatherUp.Tests
                 Assert(logContent.Contains("test2@example.com"),        "Notification sent to participant 2", "No notification for participant 2");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // Financial Summary
-                // ═══════════════════════════════════════════════════════════════
                 Print("Financial Summary Verification");
                 var finSummary = await financeService.GetFinancialSummaryAsync(999);
                 Assert(finSummary != null, "Financial summary retrieved", "Financial summary retrieval failed");
                 Assert((finSummary?.TotalIncome ?? -1) == 300,
                     $"Total income correct (got {finSummary?.TotalIncome})", "Total income incorrect");
-                Console.WriteLine($"  Total Income:   {finSummary?.TotalIncome}₪");
-                Console.WriteLine($"  Total Expenses: {finSummary?.TotalExpenses}₪");
-                Console.WriteLine($"  Balance:        {finSummary?.Balance}₪");
+                Console.WriteLine($"  Total Income:   {finSummary?.TotalIncome}");
+                Console.WriteLine($"  Total Expenses: {finSummary?.TotalExpenses}");
+                Console.WriteLine($"  Balance:        {finSummary?.Balance}");
                 Console.WriteLine();
 
-                // ═══════════════════════════════════════════════════════════════
-                // שלב ב' דרישה 4.5 — וידוא קבצי XML על הדיסק
-                // ═══════════════════════════════════════════════════════════════
                 Print("Data Persistence Verification (XML on Disk)");
                 var persistedEvent = await repos.Events.GetByIdAsync(999);
                 Assert(persistedEvent != null, "Event persisted to XML", "Event not persisted");
@@ -339,7 +271,6 @@ namespace GatherUp.Tests
                 var allVendors = (await repos.Vendors.GetAllAsync()).ToList();
                 Assert(allVendors.Count > 0, "Vendors persisted to XML", "Vendors not persisted");
 
-                // ודא שקבצי XML אכן קיימים על הדיסק
                 Assert(File.Exists(Path.Combine(xmlFolder, "Events.xml")),       "Events.xml exists on disk",       "Events.xml missing");
                 Assert(File.Exists(Path.Combine(xmlFolder, "Participants.xml")), "Participants.xml exists on disk", "Participants.xml missing");
                 Assert(File.Exists(Path.Combine(xmlFolder, "Polls.xml")),        "Polls.xml exists on disk",        "Polls.xml missing");
@@ -351,7 +282,7 @@ namespace GatherUp.Tests
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"\n❌ CRITICAL ERROR: {ex.Message}");
+                Console.WriteLine($"\n CRITICAL ERROR: {ex.Message}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 Console.ResetColor();
                 FailedTests++;
@@ -360,32 +291,28 @@ namespace GatherUp.Tests
 
             Console.WriteLine();
             Print("Test Artifacts");
-            Console.WriteLine($"  📧 Emails:   {Path.Combine(emailsFolder, "emails.log")}");
-            Console.WriteLine($"  💾 XML Data: {xmlFolder}");
-            Console.WriteLine($"  🧾 Receipts: {receiptsFolder}");
+            Console.WriteLine($"  Emails:   {Path.Combine(emailsFolder, "emails.log")}");
+            Console.WriteLine($"  XML Data: {xmlFolder}");
+            Console.WriteLine($"  Receipts: {receiptsFolder}");
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Helpers
-        // ─────────────────────────────────────────────────────────────────────
 
         static void Assert(bool condition, string successMsg, string failureMsg)
         {
             if (condition)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"  ✓ {successMsg}");
+                Console.WriteLine($"  {successMsg}");
                 Console.ResetColor();
                 PassedTests++;
-                TestResults.Add($"✓ {successMsg}");
+                TestResults.Add($"PASS: {successMsg}");
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"  ✗ {failureMsg}");
+                Console.WriteLine($"  {failureMsg}");
                 Console.ResetColor();
                 FailedTests++;
-                TestResults.Add($"✗ {failureMsg}");
+                TestResults.Add($"FAIL: {failureMsg}");
             }
         }
 
@@ -398,7 +325,7 @@ namespace GatherUp.Tests
 
         static void PrintSummary()
         {
-            Console.WriteLine("\n" + new string('═', 60));
+            Console.WriteLine("\n" + new string('=', 60));
             Print("INTEGRATION TEST SUMMARY");
             Console.WriteLine($"  Passed: {PassedTests}");
             Console.WriteLine($"  Failed: {FailedTests}");
@@ -407,15 +334,15 @@ namespace GatherUp.Tests
             if (FailedTests == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("\n  ✅ ALL TESTS PASSED - System Ready for Production");
+                Console.WriteLine("\n  ALL TESTS PASSED");
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"\n  ❌ {FailedTests} TEST(S) FAILED - Review Required");
+                Console.WriteLine($"\n  {FailedTests} TEST(S) FAILED");
             }
             Console.ResetColor();
-            Console.WriteLine(new string('═', 60));
+            Console.WriteLine(new string('=', 60));
         }
     }
 }
