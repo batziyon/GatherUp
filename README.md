@@ -82,13 +82,6 @@ $env:Jwt__Key = "YourLocalSecretAtLeast32CharsLong!"
 dotnet run --project GatherUp.API
 ```
 
-**Option C — Edit `appsettings.json` locally (never commit this):**
-```json
-"Jwt": {
-  "Key": "YourLocalSecretAtLeast32CharsLong!"
-}
-```
-
 ### Start the API
 
 ```bash

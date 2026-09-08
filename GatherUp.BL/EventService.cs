@@ -44,21 +44,16 @@ namespace GatherUp.BL
             if (pricePerParticipant < 0)
                 throw new InvalidInputException(nameof(pricePerParticipant), "price cannot be negative");
 
-            bool managerExists = false;
-            try { await _managerRepo.GetByIdAsync(managerId); managerExists = true; } catch { }
-            if (!managerExists)
+            if (!await ExistsAsync(_managerRepo, managerId))
                 throw new InvalidInputException(nameof(managerId),
                     $"EventManager with id {managerId} was not found. " +
                     "Please log out and log in again to refresh your session.");
 
             if (hostId != 0)
             {
-                bool hostFound = false;
-                try { await _hostRepo.GetByIdAsync(hostId); hostFound = true; } catch { }
-                if (!hostFound)
-                    try { await _managerRepo.GetByIdAsync(hostId); hostFound = true; } catch { }
-                if (!hostFound)
-                    try { await _participantRepo.GetByIdAsync(hostId); hostFound = true; } catch { }
+                bool hostFound = await ExistsAsync(_hostRepo, hostId)
+                              || await ExistsAsync(_managerRepo, hostId)
+                              || await ExistsAsync(_participantRepo, hostId);
                 if (!hostFound)
                     throw new InvalidInputException(nameof(hostId), $"host with id {hostId} was not found in any store");
             }
@@ -123,17 +118,9 @@ namespace GatherUp.BL
             if (string.IsNullOrWhiteSpace(hostMessageContent))
                 throw new InvalidInputException(nameof(hostMessageContent), "host message cannot be empty");
 
-            string? hostEmail = null;
-            try { var host = await _hostRepo.GetByIdAsync(ev.EventHostId); hostEmail = host.Email; }
-            catch
-            {
-                try { var mgr = await _managerRepo.GetByIdAsync(ev.EventHostId); hostEmail = mgr.Email; }
-                catch
-                {
-                    try { var part = await _participantRepo.GetByIdAsync(ev.EventHostId); hostEmail = part.Email; }
-                    catch { }
-                }
-            }
+            string? hostEmail = await TryGetHostEmailFromHosts(_hostRepo, ev.EventHostId)
+                             ?? await TryGetHostEmailFromManagers(_managerRepo, ev.EventHostId)
+                             ?? await TryGetHostEmailFromParticipants(_participantRepo, ev.EventHostId);
 
             if (hostEmail == null)
                 throw new InvalidInputException("hostId", $"host {ev.EventHostId} not found in any store");
@@ -210,6 +197,31 @@ namespace GatherUp.BL
 
             if (_notifier != null)
                 await _notifier.OnEventDetailsChangedAsync(eventId);
+        }
+
+        private static async Task<bool> ExistsAsync<T>(IRepository<T> repo, int id)
+            where T : class, GatherUp.Core.Interfaces.IEntity
+        {
+            try { await repo.GetByIdAsync(id); return true; }
+            catch (KeyNotFoundException) { return false; }
+        }
+
+        private static async Task<string?> TryGetHostEmailFromHosts(IRepository<EventHost> repo, int id)
+        {
+            try { return (await repo.GetByIdAsync(id)).Email; }
+            catch (KeyNotFoundException) { return null; }
+        }
+
+        private static async Task<string?> TryGetHostEmailFromManagers(IRepository<EventManager> repo, int id)
+        {
+            try { return (await repo.GetByIdAsync(id)).Email; }
+            catch (KeyNotFoundException) { return null; }
+        }
+
+        private static async Task<string?> TryGetHostEmailFromParticipants(IRepository<Participant> repo, int id)
+        {
+            try { return (await repo.GetByIdAsync(id)).Email; }
+            catch (KeyNotFoundException) { return null; }
         }
 
         private static void EnsureNotFinalized(Event ev)
