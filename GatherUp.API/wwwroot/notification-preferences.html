@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GatherUp – פרופיל</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Heebo',Arial,sans-serif;background:#f0f4f8;color:#2d3748;direction:rtl;padding-right:220px}
+
+    /* ── Sidebar (identical to index.html) ──────── */
+    .sidebar{
+      position:fixed;right:0;top:0;width:220px;height:100vh;
+      background:#1a202c;display:flex;flex-direction:column;
+      z-index:200;box-shadow:-2px 0 12px rgba(0,0,0,.3)
+    }
+    .sidebar-brand{
+      padding:22px 20px 18px;font-size:1.25rem;font-weight:700;
+      color:#fff;border-bottom:1px solid rgba(255,255,255,.1)
+    }
+    .sidebar-brand span{color:#63b3ed}
+    .sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+    .sidebar-nav a{
+      display:block;color:#a0aec0;text-decoration:none;
+      padding:12px 20px;font-size:.9rem;font-weight:500;
+      transition:all .2s;border-right:3px solid transparent
+    }
+    .sidebar-nav a:hover{color:#fff;background:rgba(255,255,255,.07)}
+    .sidebar-nav a.active{color:#63b3ed;border-right-color:#63b3ed;background:rgba(99,179,237,.1)}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+    .sidebar-user{font-size:.8rem;color:#718096;margin-bottom:10px}
+    .sidebar-logout{
+      width:100%;background:transparent;border:1px solid rgba(255,255,255,.25);
+      color:#a0aec0;padding:8px 12px;border-radius:6px;cursor:pointer;
+      font-size:.82rem;font-family:'Heebo',Arial,sans-serif;transition:all .2s;text-align:center
+    }
+    .sidebar-logout:hover{background:rgba(255,255,255,.1);color:#fff}
+
+    /* ── Content ──────────────────────────────────── */
+    .workspace{max-width:680px;margin:0 auto;padding:36px 20px}
+    .page-title{font-size:1.5rem;font-weight:700;color:#1a202c;margin-bottom:28px}
+
+    /* ── Cards ────────────────────────────────────── */
+    .card{background:#fff;border-radius:14px;padding:28px;
+      box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e2e8f0;margin-bottom:24px}
+    .card h3{color:#1a202c;font-size:1rem;font-weight:700;
+      margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid #e2e8f0}
+
+    /* ── Profile Info Banner ──────────────────────── */
+    .profile-banner{display:flex;gap:16px;align-items:center;
+      padding:16px;background:#f7fafc;border-radius:10px;
+      margin-bottom:24px;border:1px solid #e2e8f0}
+    .avatar{width:52px;height:52px;background:#4299e1;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-size:1.5rem;font-weight:700;flex-shrink:0}
+    .profile-banner-info h4{color:#1a202c;font-size:1rem;margin-bottom:3px}
+    .profile-banner-info p{font-size:.84rem;color:#718096}
+
+    /* ── Form fields ──────────────────────────────── */
+    .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+    .field label{font-size:.82rem;color:#4a5568;font-weight:600}
+    .field input{padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;
+      font-size:.9rem;font-family:'Heebo',Arial,sans-serif;color:#2d3748;transition:border-color .2s}
+    .field input:focus{outline:none;border-color:#4299e1}
+    .field input:disabled{background:#f7fafc;color:#a0aec0;cursor:not-allowed;border-color:#e2e8f0}
+    .readonly-hint{font-size:.75rem;color:#a0aec0;margin-top:2px}
+
+    /* ── Buttons ──────────────────────────────────── */
+    .btn{padding:9px 22px;border:none;border-radius:8px;cursor:pointer;
+      font-size:.88rem;font-family:'Heebo',Arial,sans-serif;font-weight:600;transition:all .18s}
+    .btn-primary{background:#4299e1;color:#fff}.btn-primary:hover{background:#3182ce}
+    .btn-ghost{background:#edf2f7;color:#4a5568}.btn-ghost:hover{background:#e2e8f0}
+    .btn-success{background:#48bb78;color:#fff}.btn-success:hover{background:#38a169}
+    .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+    /* ── Msg ──────────────────────────────────────── */
+    .msg{font-size:.85rem;min-height:20px;padding:4px 0}
+    .msg.ok{color:#276749}.msg.err{color:#c53030}
+
+    /* ── Preferences ──────────────────────────────── */
+    .pref-item{display:flex;align-items:flex-start;gap:14px;padding:14px;
+      border:2px solid #e2e8f0;border-radius:10px;margin-bottom:10px;
+      cursor:pointer;transition:all .2s}
+    .pref-item:hover{border-color:#4299e1;background:#ebf8ff}
+    .pref-item.active{border-color:#48bb78;background:#f0fff4}
+    .pref-item input[type="checkbox"]{margin-top:2px;width:18px;height:18px;
+      cursor:pointer;flex-shrink:0;accent-color:#48bb78}
+    .pref-icon{font-size:1.4rem;flex-shrink:0;min-width:30px;text-align:center}
+    .pref-text label{display:block;font-size:.9rem;font-weight:600;
+      cursor:pointer;color:#1a202c;margin-bottom:3px}
+    .pref-text p{font-size:.8rem;color:#718096;line-height:1.5}
+    .link-btn{background:none;border:none;color:#4299e1;cursor:pointer;
+      font-size:.84rem;text-decoration:underline;padding:0;
+      font-family:'Heebo',Arial,sans-serif}
+    .select-all-row{display:flex;gap:12px;margin-bottom:14px}
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">Gather<span>Up</span> 🎉</div>
+  <div class="sidebar-nav">
+    <a href="index.html">🏠 לוח מכוונים</a>
+    <a href="#" id="nav-create-link" style="display:none" onclick="window.location.href='index.html'">➕ יצירת אירוע</a>
+    <a href="notification-preferences.html" class="active">👤 פרופיל</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="header-user"></div>
+    <button class="sidebar-logout" onclick="logout()">יציאה →</button>
+  </div>
+</nav>
+
+<!-- ══ CONTENT ══ -->
+<div class="workspace">
+  <div class="page-title">👤 פרופיל ואישי</div>
+
+  <!-- ── Personal Details Card ── -->
+  <div class="card">
+    <h3>✏️ פרטים אישיים</h3>
+    <div class="profile-banner">
+      <div class="avatar" id="avatar">?</div>
+      <div class="profile-banner-info">
+        <h4 id="banner-name">טוען...</h4>
+        <p id="banner-email"></p>
+      </div>
+    </div>
+    <div class="field">
+      <label>שם מלא</label>
+      <input type="text" id="edit-name" placeholder="שם מלא" />
+    </div>
+    <div class="field">
+      <label>כתובת מייל</label>
+      <input type="email" id="edit-email" disabled />
+      <span class="readonly-hint">🔒 המייל הוא זהות המשתמש במערכת ולא ניתן לשינוי</span>
+    </div>
+    <div class="msg" id="profile-msg"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveProfile()">💾 שמור שינויים</button>
+    </div>
+  </div>
+
+  <!-- ── Notification Preferences Card ── -->
+  <div class="card">
+    <h3>📧 העדפות דיוור</h3>
+    <div class="select-all-row">
+      <button class="link-btn" onclick="selectAll(true)">בחר הכל</button>
+      <button class="link-btn" onclick="selectAll(false)">נקה הכל</button>
+    </div>
+    <div id="prefs-container">טוען...</div>
+    <div class="msg" id="prefs-msg"></div>
+    <div class="btn-row">
+      <button class="btn btn-success" onclick="savePreferences()">💾 שמור העדפות</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+  const user  = JSON.parse(sessionStorage.getItem('user'));
+  const token = user.token;
+  const hdr   = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const myId  = user.id;
+
+  document.getElementById('header-user').textContent = `👑 ${user.name}`;
+
+  const prefOptions = [
+    { value: 'EventChanges',          icon: '📋', label: 'שינויים בפרטי האירוע',   desc: 'קבל/י עדכון כשמשתנים פרטי האירוע.' },
+    { value: 'DirectManagerMessages', icon: '📩', label: 'הודעות ישירות מהמנהל',  desc: 'הודעות שנשלחות ישירות אליך על ידי מנהל האירוע.' },
+    { value: 'PollCreated',           icon: '📊', label: 'התראות על סקרים חדשים',  desc: 'קבל/י הודעה כשנוצר סקר חדש.' },
+    { value: 'AttendanceConfirmed',   icon: '✅', label: 'אישורי הגעה',            desc: 'קבל/י אישור בכל פעם שאישור ההגעה שלך נרשם.' },
+    { value: 'PaymentReceived',       icon: '💳', label: 'אישורי תשלום',           desc: 'קבל/י אישור בכל פעם שתשלום שלך נרשם בהצלחה.' },
+  ];
+
+  let currentPrefs = [];
+  let currentParticipant = null;
+  let resolvedParticipantId = null; // may differ from user.id for manager accounts
+
+  async function loadProfile() {
+    // Strategy: find participant by email (most reliable across roles).
+    // Managers have id=1,2,… which don't exist as Participant records.
+    const email = user.email || '';
+
+    // Step 1: search all participants for one matching this email
+    try {
+      const allRes = await fetch('/api/person', { headers: hdr });
+      if (allRes.ok) {
+        const all = await allRes.json();
+        const match = all.find(p => p.email && p.email.toLowerCase() === email.toLowerCase());
+        if (match) {
+          resolvedParticipantId = match.id;
+          // fetch full record
+          const pRes = await fetch(`/api/participants/${match.id}`, { headers: hdr });
+          if (pRes.ok) currentParticipant = await pRes.json();
+        }
+      }
+    } catch {}
+
+    // Step 2: fallback — try user.id directly (pure-participant accounts)
+    if (!currentParticipant && myId) {
+      try {
+        const pRes = await fetch(`/api/participants/${myId}`, { headers: hdr });
+        if (pRes.ok) {
+          currentParticipant = await pRes.json();
+          resolvedParticipantId = currentParticipant.id;
+        }
+      } catch {}
+    }
+
+    // Populate fields — fall back to JWT data if no participant record
+    const name  = currentParticipant?.name  || user.name  || '';
+    const emailVal = currentParticipant?.email || email;
+    currentPrefs = currentParticipant?.mailingPreferences || [];
+
+    document.getElementById('edit-name').value  = name;
+    document.getElementById('edit-email').value = emailVal;
+    document.getElementById('banner-name').textContent  = name;
+    document.getElementById('banner-email').textContent = emailVal;
+    document.getElementById('avatar').textContent = (name.charAt(0) || '?').toUpperCase();
+
+    // If no participant record found, disable the save button and show info
+    if (!resolvedParticipantId) {
+      const saveBtn = document.querySelector('.btn-primary[onclick="saveProfile()"]');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.title = 'עדכון פרטים זמין רק למשתתפים רשומים';
+        saveBtn.style.opacity = '0.5';
+      }
+      const msg = document.getElementById('profile-msg');
+      if (msg) {
+        msg.className = 'msg';
+        msg.style.color = '#718096';
+        msg.textContent = 'ℹ️ המשתמש הזה הוא מנהל מערכת בלבד. עריכת שם מתבצעת דרך הרשאות המנהל.';
+      }
+    }
+
+    renderPrefs();
+  }
+
+  function renderPrefs() {
+    document.getElementById('prefs-container').innerHTML = prefOptions.map(opt => {
+      const on = currentPrefs.includes(opt.value);
+      return `<div class="pref-item ${on ? 'active' : ''}" onclick="togglePref('${opt.value}', this)">
+        <span class="pref-icon">${opt.icon}</span>
+        <input type="checkbox" id="pref-${opt.value}" value="${opt.value}" ${on ? 'checked' : ''}
+               onclick="event.stopPropagation()" onchange="syncPrefItem(this)" />
+        <div class="pref-text">
+          <label for="pref-${opt.value}">${opt.label}</label>
+          <p>${opt.desc}</p>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function togglePref(value) {
+    const cb = document.getElementById(`pref-${value}`);
+    if (cb) { cb.checked = !cb.checked; syncPrefItem(cb); }
+  }
+
+  function syncPrefItem(cb) {
+    const row = cb.closest('.pref-item');
+    if (cb.checked) row.classList.add('active');
+    else row.classList.remove('active');
+  }
+
+  function selectAll(val) {
+    prefOptions.forEach(opt => {
+      const cb = document.getElementById(`pref-${opt.value}`);
+      if (cb) { cb.checked = val; syncPrefItem(cb); }
+    });
+  }
+
+  async function saveProfile() {
+    const msg  = document.getElementById('profile-msg');
+    const name = document.getElementById('edit-name').value.trim();
+    msg.textContent = ''; msg.className = 'msg';
+    if (!name) { msg.className = 'msg err'; msg.textContent = 'נא להזין שם מלא'; return; }
+    if (!resolvedParticipantId) {
+      msg.className = 'msg err';
+      msg.textContent = 'לא נמצא רשומת משתתף עבור משתמש זה';
+      return;
+    }
+
+    const res = await fetch(`/api/participants/${resolvedParticipantId}`, {
+      method: 'PUT', headers: hdr,
+      body: JSON.stringify({ name, email: null, mailingPreferences: null })
+    });
+    if (res.ok) {
+      msg.className = 'msg ok';
+      msg.textContent = '✅ הפרטים נשמרו בהצלחה!';
+      document.getElementById('banner-name').textContent = name;
+      document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
+      user.name = name;
+      sessionStorage.setItem('user', JSON.stringify(user));
+      document.getElementById('header-user').textContent = `👑 ${name}`;
+    } else {
+      const d = await res.json().catch(() => ({}));
+      msg.className = 'msg err';
+      msg.textContent = d.message || 'שגיאה בשמירה';
+    }
+  }
+
+  async function savePreferences() {
+    const msg = document.getElementById('prefs-msg');
+    msg.textContent = ''; msg.className = 'msg';
+    if (!resolvedParticipantId) {
+      msg.className = 'msg err';
+      msg.textContent = 'לא נמצא רשומת משתתף עבור משתמש זה';
+      return;
+    }
+    const selected = prefOptions
+      .filter(opt => document.getElementById(`pref-${opt.value}`)?.checked)
+      .map(opt => opt.value);
+    const res = await fetch(`/api/participants/${resolvedParticipantId}`, {
+      method: 'PUT', headers: hdr,
+      body: JSON.stringify({ name: null, email: null, mailingPreferences: selected })
+    });
+    if (res.ok) {
+      msg.className = 'msg ok';
+      msg.textContent = '✅ ההעדפות נשמרו בהצלחה!';
+      currentPrefs = selected;
+    } else {
+      const d = await res.json().catch(() => ({}));
+      msg.className = 'msg err';
+      msg.textContent = d.message || 'שגיאה בשמירה';
+    }
+  }
+
+  function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+
+  loadProfile();
+</script>
+</body>
+</html>

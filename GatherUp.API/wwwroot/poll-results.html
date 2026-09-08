@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – תוצאות סקר</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav { background: #34495e; display: flex; gap: 4px; padding: 8px 28px; }
+        nav a { color: #ecf0f1; text-decoration: none; padding: 6px 13px; border-radius: 4px; font-size: .88rem; }
+        nav a:hover { background: #2c3e50; }
+        main { max-width: 800px; margin: 28px auto; padding: 0 20px; }
+        h2 { color: #2c3e50; margin-bottom: 18px; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 24px; align-items: flex-end; }
+        .search-bar label { font-size: .85rem; color: #555; display: block; margin-bottom: 3px; }
+        .search-bar input { padding: 9px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: .95rem; width: 130px; }
+        .btn-blue { padding: 9px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: .9rem; }
+        .btn-blue:hover { background: #1f618d; }
+        .btn-blue:disabled { background: #95a5a6; cursor: not-allowed; }
+        .poll-card { background: white; border-radius: 10px; padding: 26px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .poll-header { margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 14px; }
+        .poll-header h3 { color: #2c3e50; font-size: 1.2rem; margin-bottom: 6px; }
+        .meta-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: #666; margin-top: 8px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: .78rem; }
+        .badge-purple { background: #f0e6ff; color: #6c3483; }
+        .badge-green  { background: #d5f5e3; color: #1e8449; }
+        .badge-red    { background: #fadbd8; color: #a93226; }
+        .question { margin-bottom: 26px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
+        .question:last-child { border-bottom: none; margin-bottom: 0; }
+        .q-title { font-weight: bold; color: #2c3e50; margin-bottom: 14px; font-size: .95rem; }
+        .opt-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: .88rem; }
+        .opt-label { min-width: 120px; color: #444; }
+        .bar-bg { flex: 1; background: #ecf0f1; border-radius: 5px; height: 22px; overflow: hidden; }
+        .bar-fill { background: linear-gradient(90deg, #2980b9, #3498db); border-radius: 5px; height: 22px; transition: width .5s ease; min-width: 2px; }
+        .bar-fill.winner { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .opt-stats { min-width: 100px; color: #555; font-size: .82rem; text-align: left; }
+        .vote-section { margin-top: 14px; background: #f8f9fa; border-radius: 6px; padding: 14px; }
+        .vote-section label { font-size: .86rem; color: #555; margin-bottom: 6px; display: block; }
+        .vote-section select { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: .88rem; min-width: 180px; }
+        .btn-vote { padding: 7px 16px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: .86rem; margin-right: 8px; }
+        .btn-vote:hover { background: #1e8449; }
+        .vote-msg { font-size: .82rem; margin-top: 6px; min-height: 18px; }
+        .error-box { background: #fce4e4; color: #a93226; padding: 14px; border-radius: 6px; }
+        .info-box { color: #888; text-align: center; padding: 40px; font-size: .95rem; }
+        .no-votes { color: #aaa; font-size: .84rem; font-style: italic; }
+        .closed-notice { background: #fadbd8; color: #a93226; padding: 10px 14px; border-radius: 6px; font-weight: bold; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎉 GatherUp – תוצאות סקר</h1>
+    <span id="header-user" style="font-size:.88rem;opacity:.85"></span>
+</header>
+<nav>
+    <a href="index.html">🏠 ראשי</a>
+    <a href="events.html">📋 אירועים</a>
+    <a href="polls.html">📊 סקרים</a>
+    <a href="poll-vote.html">🗳️ הצבעה</a>
+    <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+</nav>
+<main>
+    <h2>📊 תוצאות סקר</h2>
+    <div class="search-bar">
+        <div>
+            <label>מזהה סקר</label>
+            <input id="poll-id" type="number" min="1" value="1" />
+        </div>
+        <button class="btn-blue" id="load-btn" onclick="loadPoll()">📊 טען תוצאות</button>
+    </div>
+    <div id="poll-container"><div class="info-box">הזן מזהה סקר ולחץ "טען תוצאות"</div></div>
+</main>
+<script>
+    if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+    const user      = JSON.parse(sessionStorage.getItem('user'));
+    const token     = user.token;
+    const myId      = user.id;
+    const isManager = user.role === 'Manager';
+    const hdr       = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    document.getElementById('header-user').textContent = user.name;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('pollId')) {
+        document.getElementById('poll-id').value = params.get('pollId');
+        loadPoll();
+    }
+
+    async function loadPoll() {
+        const id  = parseInt(document.getElementById('poll-id').value);
+        const btn = document.getElementById('load-btn');
+        const box = document.getElementById('poll-container');
+        if (!id || id < 1) { box.innerHTML = '<div class="error-box">נא להזין מזהה תקין</div>'; return; }
+        box.innerHTML = '<div class="info-box">טוען...</div>';
+        btn.disabled = true;
+        try {
+            const [resultsRes, openRes] = await Promise.all([
+                fetch(`/api/polls/${id}/results`),
+                fetch(`/api/polls/${id}/open`)
+            ]);
+            if (!resultsRes.ok) {
+                box.innerHTML = `<div class="error-box">❌ סקר ${id} לא נמצא</div>`;
+                return;
+            }
+            const poll   = await resultsRes.json();
+            const isOpen = openRes.ok ? await openRes.json() : true;
+            renderPoll(poll, isOpen, id);
+        } catch {
+            box.innerHTML = '<div class="error-box">שגיאת חיבור לשרת</div>';
+        } finally { btn.disabled = false; }
+    }
+
+    function renderPoll(poll, isOpen, pollId) {
+        const maxCount = Math.max(...poll.questionResults.flatMap(qr => qr.stats.map(s => s.count)), 1);
+        const box = document.getElementById('poll-container');
+        box.innerHTML = `
+            <div class="poll-card">
+                <div class="poll-header">
+                    <h3>📊 ${esc(poll.name)}</h3>
+                    <div class="meta-row">
+                        ${poll.isPreliminary ? '<span class="badge badge-purple">📝 שאלון מקדים</span>' : ''}
+                        <span class="badge ${isOpen ? 'badge-green' : 'badge-red'}">${isOpen ? '🟢 פתוח' : '🔴 סגור'}</span>
+                        ${poll.code ? `<span style="color:#888">קוד: ${esc(poll.code)}</span>` : ''}
+                        ${poll.closingDate ? `<span>📅 סגירה: ${new Date(poll.closingDate).toLocaleDateString('he-IL')}</span>` : ''}
+                    </div>
+                </div>
+                ${!isOpen ? '<div class="closed-notice">⛔ השאלון סגור — לא ניתן להצביע</div>' : ''}
+                ${poll.questionResults.map(qr => renderQuestion(qr, pollId, isOpen)).join('')}
+            </div>`;
+    }
+
+    function renderQuestion(qr, pollId, isOpen) {
+        const total   = qr.stats.reduce((s, x) => s + x.count, 0);
+        const maxPct  = Math.max(...qr.stats.map(s => s.percentage), 1);
+        const stats   = qr.stats.map(s => `
+            <div class="opt-row">
+                <span class="opt-label">${esc(s.option)}</span>
+                <div class="bar-bg">
+                    <div class="bar-fill ${s.percentage === maxPct && total > 0 ? 'winner' : ''}"
+                         style="width:${s.percentage}%"></div>
+                </div>
+                <span class="opt-stats">${s.count} (${s.percentage}%)</span>
+            </div>`).join('');
+
+        const voteHtml = (!isManager && isOpen) ? `
+            <div class="vote-section">
+                <label>🗳️ הצבע:</label>
+                <select id="sel-${qr.questionId}">
+                    ${qr.stats.map(s => `<option value="${esc(s.option)}">${esc(s.option)}</option>`).join('')}
+                </select>
+                <button class="btn-vote" onclick="vote(${pollId},${qr.questionId})">הצבע</button>
+                <div class="vote-msg" id="vmsg-${qr.questionId}"></div>
+            </div>` : '';
+
+        return `<div class="question">
+            <div class="q-title">❓ ${esc(qr.questionText)}</div>
+            ${stats}
+            ${total === 0 ? '<p class="no-votes">עדיין אין הצבעות</p>' : `<p style="color:#888;font-size:.82rem;margin-top:6px">סה"כ הצבעות: ${total}</p>`}
+            ${voteHtml}
+        </div>`;
+    }
+
+    async function vote(pollId, questionId) {
+        const answer = document.getElementById(`sel-${questionId}`)?.value;
+        const vmsg   = document.getElementById(`vmsg-${questionId}`);
+        if (!answer) return;
+        const res = await fetch(`/api/polls/${pollId}/vote`, {
+            method: 'POST', headers: hdr,
+            body: JSON.stringify({ questionId, participantId: myId, answer })
+        });
+        if (res.ok) {
+            vmsg.style.color = '#27ae60'; vmsg.textContent = '✅ הצבעתך נרשמה!';
+            setTimeout(() => loadPoll(), 800);
+        } else {
+            const d = await res.json().catch(() => ({}));
+            vmsg.style.color = '#e74c3c'; vmsg.textContent = d.message || 'שגיאה בהצבעה';
+        }
+    }
+
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+</script>
+</body>
+</html>

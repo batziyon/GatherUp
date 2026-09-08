@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – אישור הגעה</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav { background: #34495e; display: flex; gap: 4px; padding: 8px 28px; }
+        nav a { color: #ecf0f1; text-decoration: none; padding: 6px 13px; border-radius: 4px; font-size: .88rem; }
+        nav a:hover { background: #2c3e50; }
+        main { max-width: 620px; margin: 36px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+        .card h2 { color: #2c3e50; margin-bottom: 20px; font-size: 1.3rem; }
+        .event-info { background: #f0f4f8; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+        .event-info h3 { color: #2c3e50; margin-bottom: 8px; }
+        .event-info p { font-size: .88rem; color: #555; line-height: 1.7; }
+        .section-title { font-weight: bold; color: #2c3e50; margin-bottom: 12px; font-size: .95rem; }
+        .attendance-btns { display: flex; gap: 12px; margin-bottom: 24px; }
+        .att-btn { flex: 1; padding: 14px; border: 2px solid #dee2e6; border-radius: 8px; background: white;
+                   cursor: pointer; font-size: .95rem; text-align: center; transition: all .2s; }
+        .att-btn:hover { border-color: #2980b9; }
+        .att-btn.selected-yes { border-color: #27ae60; background: #eafaf1; color: #1e8449; font-weight: bold; }
+        .att-btn.selected-no  { border-color: #e74c3c; background: #fdf2f0; color: #a93226; font-weight: bold; }
+        .prefs-section { margin-bottom: 24px; }
+        .pref-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #dee2e6;
+                     border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
+        .pref-item:hover { background: #f0f4f8; }
+        .pref-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .pref-item label { cursor: pointer; font-size: .9rem; color: #333; }
+        .pref-item .desc { font-size: .8rem; color: #888; }
+        .submit-btn { width: 100%; padding: 13px; background: #2980b9; color: white; border: none; border-radius: 8px;
+                      font-size: 1rem; cursor: pointer; }
+        .submit-btn:hover { background: #1f618d; }
+        .submit-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .msg { margin-top: 12px; padding: 10px; border-radius: 5px; font-size: .9rem; min-height: 20px; }
+        .msg.ok  { background: #d5f5e3; color: #1e8449; }
+        .msg.err { background: #fadbd8; color: #a93226; }
+        .loading { color: #888; text-align: center; padding: 30px; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
+        .search-bar label { font-size: .85rem; color: #555; display: block; margin-bottom: 3px; }
+        .search-bar input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: .9rem; }
+        .btn-blue { padding: 8px 18px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎉 GatherUp – אישור הגעה</h1>
+    <span id="header-user" style="font-size:.88rem;opacity:.85"></span>
+</header>
+<nav>
+    <a href="index.html">🏠 ראשי</a>
+    <a href="my-events.html">🎫 האירועים שלי</a>
+    <a href="events.html">📋 כל האירועים</a>
+    <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+</nav>
+<main>
+    <div class="search-bar">
+        <div>
+            <label>מזהה אירוע</label>
+            <input id="event-id" type="number" min="1" />
+        </div>
+        <button class="btn-blue" onclick="loadEvent()">טען אירוע</button>
+    </div>
+    <div id="rsvp-container"><div class="loading">הזן מזהה אירוע ולחץ "טען אירוע"</div></div>
+</main>
+<script>
+    // Parse URL params first so we can check participantId before the auth guard.
+    // A participant arriving via a personalized invitation link must NOT be redirected
+    // to login — they authenticate via their unique participantId in the URL.
+    const params = new URLSearchParams(window.location.search);
+
+    if (!sessionStorage.getItem('user') && !params.get('participantId'))
+        window.location.replace('login.html');
+
+    // If they have a participantId in the URL but no session, provide a minimal
+    // user object so the page can render without crashing on user.name / user.token
+    const user  = sessionStorage.getItem('user')
+        ? JSON.parse(sessionStorage.getItem('user'))
+        : { name: 'אורח', token: '', id: 0, role: 'Participant' };
+    const token = user.token;
+    const hdr   = token
+        ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        : { 'Content-Type': 'application/json' };
+
+    document.getElementById('header-user').textContent = user.name;
+    const urlParticipantId = parseInt(params.get('participantId')) || 0;
+
+    // Strict: participantId must come from the URL (personalized invitation link).
+    // If missing, show a friendly message and stop — never fall back to a hardcoded ID.
+    if (!urlParticipantId) {
+        document.getElementById('rsvp-container').innerHTML =
+            `<div class="card" style="text-align:center;padding:40px">
+                <div style="font-size:2.5rem;margin-bottom:16px">📩</div>
+                <h2 style="color:#2c3e50;margin-bottom:12px">לינק אישי נדרש</h2>
+                <p style="color:#666;font-size:.95rem;line-height:1.7">
+                    אנא היכנס/י באמצעות הלינק האישי שקיבלת בהזמנה.
+                </p>
+                <p style="color:#aaa;font-size:.82rem;margin-top:16px">
+                    אם לא קיבלת הזמנה, פנה/י למנהל האירוע.
+                </p>
+            </div>`;
+        document.querySelector('.search-bar').style.display = 'none';
+    }
+
+    // ---- משתנים ופונקציות גלובליות (חייבים להיות מחוץ לבלוק if כדי שה-onclick יעבוד) ----
+    const myId = urlParticipantId;
+    let attending = null;
+
+    const prefOptions = [
+        { value: 'EventChanges',         label: 'שינויים בפרטי האירוע',    desc: 'קבל/י עדכון כשמשהו משתנה' },
+        { value: 'DirectManagerMessages', label: 'הודעות ישירות מהמנהל',   desc: 'הודעות אישיות מהמנהל' },
+        { value: 'PollCreated',           label: 'התראות על סקרים חדשים',   desc: 'קבל/י הודעה כשנוצר סקר' },
+        { value: 'AttendanceConfirmed',   label: 'אישורי הגעה',             desc: 'אישור על כל פעולת RSVP' },
+        { value: 'PaymentReceived',       label: 'אישורי תשלום',            desc: 'אישור על כל תשלום' },
+    ];
+
+    if (urlParticipantId) {
+        // Auto-load event if eventId is also in the URL
+        if (params.get('eventId')) {
+            document.getElementById('event-id').value = params.get('eventId');
+            // הסתר שורת חיפוש — הכל נטען אוטומטי מהלינק
+            document.querySelector('.search-bar').style.display = 'none';
+            loadEvent();
+        }
+    }
+
+    async function loadEvent() {
+        const id  = parseInt(document.getElementById('event-id').value);
+        const box = document.getElementById('rsvp-container');
+        if (!id || id < 1) { box.innerHTML = '<div style="color:#e74c3c">נא להזין מזהה תקין</div>'; return; }
+        box.innerHTML = '<div class="loading">טוען...</div>';
+        try {
+            const res = await fetch(`/api/events/${id}`);
+            if (!res.ok) { box.innerHTML = '<div style="color:#e74c3c">אירוע לא נמצא</div>'; return; }
+            const ev = await res.json();
+            renderRsvp(ev, id);
+        } catch { box.innerHTML = '<div style="color:#e74c3c">שגיאת חיבור</div>'; }
+    }
+
+    function renderRsvp(ev, eventId) {
+        const box = document.getElementById('rsvp-container');
+        box.innerHTML = `
+            <div class="card">
+                <h2>📩 אישור הגעה לאירוע</h2>
+                <div class="event-info">
+                    <h3>🎉 ${esc(ev.name)}</h3>
+                    <p>📅 תאריך: ${new Date(ev.date).toLocaleDateString('he-IL')}</p>
+                    <p>📍 מיקום: ${esc(ev.location || 'טרם נקבע')}</p>
+                    <p>💰 מחיר: ${ev.pricePerParticipant}₪</p>
+                    ${ev.invitationMessage ? `<p style="margin-top:8px;font-style:italic">"${esc(ev.invitationMessage)}"</p>` : ''}
+                    ${ev.paymentDetails ? `<p style="margin-top:6px">💳 ${esc(ev.paymentDetails)}</p>` : ''}
+                </div>
+
+                <div class="section-title">האם אתה/את מגיע/ה?</div>
+                <div class="attendance-btns">
+                    <button class="att-btn" id="btn-yes" onclick="selectAtt(true)">✅ כן, אני מגיע/ה!</button>
+                    <button class="att-btn" id="btn-no"  onclick="selectAtt(false)">❌ לא אוכל להגיע</button>
+                </div>
+
+                <div id="prefs-section" class="prefs-section" style="display:none">
+                    <div class="section-title">📧 העדפות דיוור (אפשרויות)</div>
+                    ${prefOptions.map(p => `
+                        <div class="pref-item" onclick="togglePref('${p.value}')">
+                            <input type="checkbox" id="pref-${p.value}" value="${p.value}" checked />
+                            <div>
+                                <label for="pref-${p.value}">${p.label}</label>
+                                <div class="desc">${p.desc}</div>
+                            </div>
+                        </div>`).join('')}
+                </div>
+
+                <button class="submit-btn" id="rsvp-btn" onclick="submitRsvp(${eventId})">שלח אישור הגעה</button>
+                <div class="msg" id="rsvp-msg"></div>
+            </div>`;
+        attending = null;
+    }
+
+    function selectAtt(val) {
+        attending = val;
+        document.getElementById('btn-yes').className = 'att-btn' + (val ? ' selected-yes' : '');
+        document.getElementById('btn-no').className  = 'att-btn' + (!val ? ' selected-no' : '');
+        document.getElementById('prefs-section').style.display = val ? 'block' : 'none';
+    }
+
+    function togglePref(val) {
+        const cb = document.getElementById(`pref-${val}`);
+        if (cb) cb.checked = !cb.checked;
+    }
+
+    async function submitRsvp(eventId) {
+        const msg = document.getElementById('rsvp-msg');
+        const btn = document.getElementById('rsvp-btn');
+        msg.textContent = ''; msg.className = 'msg';
+        if (attending === null) { msg.className = 'msg err'; msg.textContent = 'נא לבחור האם אתה/את מגיע/ה'; return; }
+
+        const selectedPrefs = attending
+            ? prefOptions.filter(p => document.getElementById(`pref-${p.value}`)?.checked).map(p => p.value)
+            : [];
+
+        // משתתף שהגיע דרך לינק הזמנה ואין לו JWT → נתיב פומבי ללא אימות
+        const isAuthenticated = !!token;
+        const endpoint = isAuthenticated
+            ? `/api/participants/${myId}/attendance?eventId=${eventId}`
+            : `/api/participants/${myId}/attendance/public?eventId=${eventId}`;
+        const headers = isAuthenticated
+            ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+            : { 'Content-Type': 'application/json' };
+
+        btn.disabled = true; btn.textContent = 'שולח...';
+        try {
+            const res = await fetch(endpoint, {
+                method: 'PUT', headers,
+                body: JSON.stringify({ isAttending: attending, selectedPreferences: selectedPrefs })
+            });
+            btn.disabled = false; btn.textContent = 'שלח אישור הגעה';
+            if (res.ok) {
+                msg.className = 'msg ok';
+                msg.textContent = attending ? '✅ אישור הגעה נרשם בהצלחה!' : '❌ דיווחת שלא מגיע/ה';
+                if (isAuthenticated) {
+                    setTimeout(() => window.location.href = 'my-events.html', 1800);
+                }
+            } else {
+                const d = await res.json().catch(() => ({}));
+                msg.className = 'msg err';
+                msg.textContent = d.message || 'שגיאה בשליחת אישור הגעה';
+            }
+        } catch {
+            btn.disabled = false; btn.textContent = 'שלח אישור הגעה';
+            msg.className = 'msg err';
+            msg.textContent = 'שגיאת חיבור — נסה שוב';
+        }
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+</script>
+</body>
+</html>

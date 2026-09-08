@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ArrayOfReceipt xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Receipt id="1">
+    <VendorId>1</VendorId>
+    <ReceiptNumber>123</ReceiptNumber>
+    <FilePath>IMG_0560.JPG</FilePath>
+    <Amount>200</Amount>
+    <Date>2026-06-24T00:00:00Z</Date>
+  </Receipt>
+  <Receipt id="2">
+    <VendorId>2</VendorId>
+    <ReceiptNumber>1234</ReceiptNumber>
+    <FilePath>receipts/vendor-2-1234.pdf</FilePath>
+    <Amount>100</Amount>
+    <Date>2026-06-24T00:00:00Z</Date>
+  </Receipt>
+  <Receipt id="3">
+    <VendorId>2</VendorId>
+    <ReceiptNumber>1234</ReceiptNumber>
+    <FilePath>receipts/vendor-2-1234.pdf</FilePath>
+    <Amount>100</Amount>
+    <Date>2026-06-24T00:00:00Z</Date>
+  </Receipt>
+  <Receipt id="4">
+    <VendorId>3</VendorId>
+    <ReceiptNumber>REC-E2E-001</ReceiptNumber>
+    <FilePath>receipt.pdf</FilePath>
+    <Amount>200</Amount>
+    <Date>2025-12-01T00:00:00Z</Date>
+  </Receipt>
+  <Receipt id="5">
+    <VendorId>1</VendorId>
+    <ReceiptNumber>34567</ReceiptNumber>
+    <FilePath>vendor-1-20260625081111.png</FilePath>
+    <Amount>100</Amount>
+    <Date>2026-06-25T00:00:00Z</Date>
+  </Receipt>
+</ArrayOfReceipt>

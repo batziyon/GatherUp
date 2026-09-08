@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ArrayOfPoll xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Poll id="1">
+    <Code>PRE500A</Code>
+    <Name>שאלון מיקום ותאריך</Name>
+    <Description>בחר/י מיקום ותאריך</Description>
+    <ClosingDate>2026-07-01T22:16:40.9761422+03:00</ClosingDate>
+    <IsPreliminary>true</IsPreliminary>
+    <Questions>
+      <PollQuestion id="1">
+        <QuestionText>באיזה תאריך?</QuestionText>
+        <Options>
+          <string>01/08</string>
+          <string>15/08</string>
+          <string>01/09</string>
+        </Options>
+        <ParticipantAnswers>
+          <PollResponse>
+            <ParticipantId>1</ParticipantId>
+            <Answer>15/08</Answer>
+          </PollResponse>
+        </ParticipantAnswers>
+      </PollQuestion>
+      <PollQuestion id="2">
+        <QuestionText>איזה מיקום?</QuestionText>
+        <Options>
+          <string>ירושלים</string>
+          <string>תל אביב</string>
+          <string>חיפה</string>
+        </Options>
+        <ParticipantAnswers>
+          <PollResponse>
+            <ParticipantId>1</ParticipantId>
+            <Answer>תל אביב</Answer>
+          </PollResponse>
+        </ParticipantAnswers>
+      </PollQuestion>
+    </Questions>
+  </Poll>
+  <Poll id="2">
+    <Code>POLL500B</Code>
+    <Name>סקר כיבוד</Name>
+    <Description>בחר/י סגנון כיבוד</Description>
+    <ClosingDate xsi:nil="true" />
+    <IsPreliminary>false</IsPreliminary>
+    <Questions>
+      <PollQuestion id="3">
+        <QuestionText>איזה כיבוד?</QuestionText>
+        <Options>
+          <string>בשרי</string>
+          <string>חלבי</string>
+          <string>טבעוני</string>
+        </Options>
+        <ParticipantAnswers />
+      </PollQuestion>
+    </Questions>
+  </Poll>
+  <Poll id="3">
+    <Code>PRE501A</Code>
+    <Name>שאלון תחילתי - מסיבת יום הולדת</Name>
+    <Description>פרטי המסיבה</Description>
+    <ClosingDate>2026-06-29T22:16:40.9806998+03:00</ClosingDate>
+    <IsPreliminary>true</IsPreliminary>
+    <Questions>
+      <PollQuestion id="4">
+        <QuestionText>נושא המסיבה?</QuestionText>
+        <Options>
+          <string>ספייס</string>
+          <string>ים</string>
+          <string>פרחים</string>
+        </Options>
+        <ParticipantAnswers />
+      </PollQuestion>
+      <PollQuestion id="5">
+        <QuestionText>מספר מוזמנים?</QuestionText>
+        <Options>
+          <string>עד 20</string>
+          <string>20-50</string>
+          <string>50+</string>
+        </Options>
+        <ParticipantAnswers />
+      </PollQuestion>
+    </Questions>
+  </Poll>
+  <Poll id="4">
+    <Code>1CA2F402</Code>
+    <Name>E2E Poll</Name>
+    <ClosingDate xsi:nil="true" />
+    <IsPreliminary>false</IsPreliminary>
+    <Questions>
+      <PollQuestion id="1">
+        <QuestionText>Best time?</QuestionText>
+        <Options>
+          <string>Morning</string>
+          <string>Evening</string>
+          <string>Weekend</string>
+        </Options>
+        <ParticipantAnswers>
+          <PollResponse>
+            <ParticipantId>104</ParticipantId>
+            <Answer>Morning</Answer>
+          </PollResponse>
+        </ParticipantAnswers>
+      </PollQuestion>
+    </Questions>
+  </Poll>
+</ArrayOfPoll>

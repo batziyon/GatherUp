@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ArrayOfEventManager xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <EventManager id="1">
+    <Name>מיכל כהן</Name>
+    <Email>michal.cohen.dev@gmail.com</Email>
+    <Password>123456</Password>
+  </EventManager>
+  <EventManager id="2">
+    <Name>שרה לוי</Name>
+    <Email>sarah.levi.manager@gmail.com</Email>
+    <Password>123456</Password>
+  </EventManager>
+  <EventManager id="102">
+    <Name>אביגיל הלוי</Name>
+    <Email>avigail@gmail.com</Email>
+    <Password>123456</Password>
+  </EventManager>
+  <EventManager id="104">
+    <Name>Test Participant</Name>
+    <Email>test.e2e@example.com</Email>
+    <Password>Test1234</Password>
+  </EventManager>
+</ArrayOfEventManager>

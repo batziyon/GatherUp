@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ArrayOfVendorAllocation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <VendorAllocation id="1">
+    <Name>קייטרינג אסאדו</Name>
+    <AmountOwed>4200</AmountOwed>
+    <IsPaid>false</IsPaid>
+    <HasReceipt>true</HasReceipt>
+    <ReceiptIds>
+      <int>1</int>
+      <int>5</int>
+    </ReceiptIds>
+  </VendorAllocation>
+  <VendorAllocation id="2">
+    <Name>צלם מקצועי</Name>
+    <AmountOwed>2000</AmountOwed>
+    <IsPaid>false</IsPaid>
+    <HasReceipt>true</HasReceipt>
+    <ReceiptIds>
+      <int>2</int>
+      <int>3</int>
+    </ReceiptIds>
+  </VendorAllocation>
+  <VendorAllocation id="3">
+    <Name>E2E Catering</Name>
+    <AmountOwed>300</AmountOwed>
+    <IsPaid>false</IsPaid>
+    <HasReceipt>true</HasReceipt>
+    <ReceiptIds>
+      <int>4</int>
+    </ReceiptIds>
+  </VendorAllocation>
+</ArrayOfVendorAllocation>

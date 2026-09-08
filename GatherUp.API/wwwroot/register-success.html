@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – הצלחה!</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: white; border-radius: 16px; padding: 50px 40px; box-shadow: 0 4px 20px rgba(0,0,0,.12); text-align: center; max-width: 480px; width: 90%; }
+        .icon { font-size: 5rem; margin-bottom: 16px; animation: pop .5s ease; }
+        @keyframes pop { 0%{transform:scale(.5);opacity:0} 80%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+        h2 { color: #1e8449; font-size: 1.6rem; margin-bottom: 10px; }
+        p  { color: #555; font-size: .95rem; line-height: 1.6; margin-bottom: 24px; }
+        .actions { display: flex; flex-direction: column; gap: 10px; }
+        a.btn { display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: .95rem; }
+        .btn-primary { background: #2980b9; color: white; }
+        .btn-primary:hover { background: #1f618d; }
+        .btn-secondary { background: #f0f4f8; color: #2c3e50; }
+        .btn-secondary:hover { background: #e0e8f0; }
+        .countdown { font-size: .82rem; color: #aaa; margin-top: 14px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon" id="icon">✅</div>
+    <h2 id="title">הצלחה!</h2>
+    <p id="desc">הפעולה הושלמה בהצלחה.</p>
+    <div class="actions" id="actions"></div>
+    <div class="countdown" id="countdown"></div>
+</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const type   = params.get('type') || 'register';
+
+    const configs = {
+        register: {
+            icon: '🎉',
+            title: 'ברוך הבא ל-GatherUp!',
+            desc:  'נרשמת בהצלחה למערכת. עכשיו תוכל/י להצטרף לאירועים, למלא סקרים ולנהל הכל במקום אחד.',
+            actions: [
+                { href: 'index.html',    label: '🏠 לדף הבית',          cls: 'btn-primary' },
+                { href: 'events.html',   label: '📋 צפה באירועים',      cls: 'btn-secondary' },
+                { href: 'my-events.html',label: '🎫 האירועים שלי',      cls: 'btn-secondary' },
+            ],
+            redirect: 'index.html',
+            delay: 5
+        },
+        payment: {
+            icon: '💳',
+            title: 'תשלום התקבל!',
+            desc:  'תשלומך נרשם בהצלחה במערכת. תודה!',
+            actions: [
+                { href: 'my-events.html', label: '🎫 האירועים שלי',   cls: 'btn-primary' },
+                { href: 'index.html',     label: '🏠 לדף הבית',       cls: 'btn-secondary' },
+            ],
+            redirect: 'my-events.html',
+            delay: 4
+        },
+        rsvp: {
+            icon: '📩',
+            title: 'אישור הגעה נשלח!',
+            desc:  'אישור ההגעה שלך נרשם. נשמח לראות אותך!',
+            actions: [
+                { href: 'my-events.html', label: '🎫 האירועים שלי',   cls: 'btn-primary' },
+                { href: 'events.html',    label: '📋 כל האירועים',    cls: 'btn-secondary' },
+            ],
+            redirect: 'my-events.html',
+            delay: 4
+        }
+    };
+
+    const cfg = configs[type] || configs.register;
+    document.getElementById('icon').textContent  = cfg.icon;
+    document.getElementById('title').textContent = cfg.title;
+    document.getElementById('desc').textContent  = cfg.desc;
+    document.getElementById('actions').innerHTML = cfg.actions
+        .map(a => `<a class="btn ${a.cls}" href="${a.href}">${a.label}</a>`).join('');
+
+    // Countdown
+    let secs = cfg.delay;
+    const cdEl = document.getElementById('countdown');
+    cdEl.textContent = `מועבר אוטומטית בעוד ${secs} שניות...`;
+    const iv = setInterval(() => {
+        secs--;
+        if (secs <= 0) { clearInterval(iv); window.location.href = cfg.redirect; }
+        else cdEl.textContent = `מועבר אוטומטית בעוד ${secs} שניות...`;
+    }, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ArrayOfParticipant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Participant id="101">
+    <Name>מיכל כהן-לוי</Name>
+    <Email>michal.cohen.dev@gmail.com</Email>
+    <Password>123456</Password>
+    <IsAttending>true</IsAttending>
+    <HasPaid>true</HasPaid>
+    <AmountContributed>200</AmountContributed>
+    <MailingPreferences>
+      <MailingPreference>EventChanges</MailingPreference>
+      <MailingPreference>PollCreated</MailingPreference>
+      <MailingPreference>AttendanceConfirmed</MailingPreference>
+      <MailingPreference>PaymentReceived</MailingPreference>
+    </MailingPreferences>
+    <EventPayments>
+      <EventPayment eventId="500" amount="200" />
+    </EventPayments>
+  </Participant>
+  <Participant id="102">
+    <Name>אביגיל הלוי</Name>
+    <Email>avigail@gmail.com</Email>
+    <Password>123456</Password>
+    <IsAttending>true</IsAttending>
+    <HasPaid>false</HasPaid>
+    <AmountContributed>0</AmountContributed>
+    <MailingPreferences>
+      <MailingPreference>EventChanges</MailingPreference>
+      <MailingPreference>DirectManagerMessages</MailingPreference>
+      <MailingPreference>PollCreated</MailingPreference>
+      <MailingPreference>AttendanceConfirmed</MailingPreference>
+      <MailingPreference>PaymentReceived</MailingPreference>
+    </MailingPreferences>
+    <EventPayments />
+  </Participant>
+  <Participant id="103">
+    <Name>דוד ישראלי</Name>
+    <Email>david.israeli@gmail.com</Email>
+    <Password>123456</Password>
+    <IsAttending>true</IsAttending>
+    <HasPaid>true</HasPaid>
+    <AmountContributed>200</AmountContributed>
+    <MailingPreferences>
+      <MailingPreference>EventChanges</MailingPreference>
+    </MailingPreferences>
+    <EventPayments>
+      <EventPayment eventId="500" amount="200" />
+    </EventPayments>
+  </Participant>
+  <Participant id="104">
+    <Name>Test Participant</Name>
+    <Email>test.e2e@example.com</Email>
+    <Password>Test1234</Password>
+    <IsAttending>true</IsAttending>
+    <HasPaid>true</HasPaid>
+    <AmountContributed>150</AmountContributed>
+    <MailingPreferences>
+      <MailingPreference>EventChanges</MailingPreference>
+      <MailingPreference>PollCreated</MailingPreference>
+      <MailingPreference>PaymentReceived</MailingPreference>
+    </MailingPreferences>
+    <EventPayments>
+      <EventPayment eventId="505" amount="150" />
+    </EventPayments>
+  </Participant>
+</ArrayOfParticipant>

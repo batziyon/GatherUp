@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "GatherUp.Infrastructure/1.0.0": {
+        "dependencies": {
+          "GatherUp.Core": "1.0.0"
+        },
+        "runtime": {
+          "GatherUp.Infrastructure.dll": {}
+        }
+      },
+      "GatherUp.Core/1.0.0": {
+        "runtime": {
+          "GatherUp.Core.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "GatherUp.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "GatherUp.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

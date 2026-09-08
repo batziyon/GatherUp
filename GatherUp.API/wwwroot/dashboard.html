@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – לוח מחוונים</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; color: #333; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav { background: #34495e; display: flex; gap: 4px; padding: 8px 28px; flex-wrap: wrap; }
+        nav a { color: #ecf0f1; text-decoration: none; padding: 6px 13px; border-radius: 4px; font-size: 0.88rem; }
+        nav a:hover, nav a.active { background: #2c3e50; }
+        main { max-width: 1000px; margin: 28px auto; padding: 0 20px; }
+        .welcome { background: linear-gradient(135deg,#2c3e50,#2980b9); color: white; border-radius: 10px; padding: 28px; margin-bottom: 26px; }
+        .welcome h2 { font-size: 1.4rem; margin-bottom: 6px; }
+        .welcome p { opacity: .85; font-size: .92rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.08); text-align: center; border-top: 4px solid #2980b9; }
+        .stat-card.green  { border-top-color: #27ae60; }
+        .stat-card.orange { border-top-color: #e67e22; }
+        .stat-card.purple { border-top-color: #8e44ad; }
+        .stat-card .num { font-size: 2rem; font-weight: bold; color: #2c3e50; }
+        .stat-card .lbl { font-size: .82rem; color: #888; margin-top: 4px; }
+        .section-title { font-size: 1rem; font-weight: bold; color: #2c3e50; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 2px solid #2980b9; }
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .action-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .action-card h3 { font-size: .95rem; margin-bottom: 8px; color: #2c3e50; }
+        .action-card p { font-size: .82rem; color: #666; margin-bottom: 14px; line-height: 1.5; }
+        .btn { display: inline-block; padding: 8px 18px; border-radius: 5px; border: none; cursor: pointer; font-size: .85rem; text-decoration: none; }
+        .btn-blue   { background: #2980b9; color: white; }
+        .btn-blue:hover   { background: #1f618d; }
+        .btn-green  { background: #27ae60; color: white; }
+        .btn-green:hover  { background: #1e8449; }
+        .btn-purple { background: #8e44ad; color: white; }
+        .btn-purple:hover { background: #6c3483; }
+        .btn-orange { background: #e67e22; color: white; }
+        .btn-orange:hover { background: #ca6f1e; }
+        .events-table { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.08); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+        th { background: #2c3e50; color: white; padding: 9px 10px; text-align: right; }
+        td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f5f8fb; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .75rem; }
+        .badge-green  { background: #d5f5e3; color: #1e8449; }
+        .badge-blue   { background: #d6eaf8; color: #1a5276; }
+        .badge-orange { background: #fdebd0; color: #935116; }
+        .loading { color: #888; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎉 GatherUp</h1>
+    <span id="header-user" style="font-size:.88rem;opacity:.85"></span>
+</header>
+<nav>
+    <a href="index.html">🏠 ראשי</a>
+    <a href="dashboard.html" class="active" id="nav-dashboard" style="display:none">📊 לוח מחוונים</a>
+    <a href="events.html">📋 אירועים</a>
+    <a href="create-event.html" id="nav-create" style="display:none">➕ צור אירוע</a>
+    <a href="participants.html" id="nav-participants" style="display:none">👥 משתתפים</a>
+    <a href="polls.html">📊 סקרים</a>
+    <a href="financial.html" id="nav-financial" style="display:none">💰 כספים</a>
+    <a href="notifications.html">🔔 התראות</a>
+    <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+</nav>
+<main>
+    <div class="welcome">
+        <h2 id="welcome-msg">ברוך הבא!</h2>
+        <p>לוח מחוונים למנהל האירועים — סקירת מצב כוללת</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="num" id="stat-events">—</div><div class="lbl">אירועים שאני מנהל</div></div>
+        <div class="stat-card green"><div class="num" id="stat-participants">—</div><div class="lbl">משתתפים רשומים</div></div>
+        <div class="stat-card orange"><div class="num" id="stat-polls">—</div><div class="lbl">סקרים פעילים</div></div>
+        <div class="stat-card purple"><div class="num" id="stat-pending">—</div><div class="lbl">ממתינים לאישור הגעה</div></div>
+    </div>
+
+    <div class="section-title">⚡ פעולות מהירות</div>
+    <div class="action-grid">
+        <div class="action-card">
+            <h3>➕ צור אירוע חדש</h3>
+            <p>הוסף אירוע חדש למערכת עם פרטים מלאים.</p>
+            <a class="btn btn-green" href="create-event.html">צור אירוע</a>
+        </div>
+        <div class="action-card">
+            <h3>👥 ניהול משתתפים</h3>
+            <p>הוסף, ערוך ועקוב אחר משתתפי האירועים שלך.</p>
+            <a class="btn btn-blue" href="participants.html">לניהול משתתפים</a>
+        </div>
+        <div class="action-card">
+            <h3>📊 יצירת סקר</h3>
+            <p>צור שאלון חדש לאירוע ועקוב אחרי תוצאות.</p>
+            <a class="btn btn-purple" href="polls.html">לסקרים</a>
+        </div>
+        <div class="action-card">
+            <h3>💰 ניהול כספי</h3>
+            <p>עקוב אחר תשלומים, ספקים וסיכום פיננסי.</p>
+            <a class="btn btn-orange" href="financial.html">לניהול כספים</a>
+        </div>
+    </div>
+
+    <div class="section-title">📋 האירועים שלי</div>
+    <div class="events-table">
+        <div class="loading" id="events-loading">טוען אירועים...</div>
+        <table id="events-table" style="display:none">
+            <thead><tr><th>שם</th><th>תאריך</th><th>מיקום</th><th>משתתפים</th><th>סקרים</th><th>סטטוס</th><th>פעולות</th></tr></thead>
+            <tbody id="events-tbody"></tbody>
+        </table>
+    </div>
+</main>
+<script>
+    if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (user.role !== 'Manager') window.location.replace('index.html');
+
+    const token = user.token;
+    const myId  = user.id;
+    const isManager = user.role === 'Manager';
+    const hdr   = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    document.getElementById('welcome-msg').textContent = `ברוך הבא, ${user.name}! 👑`;
+    document.getElementById('header-user').textContent = `👑 ${user.name}`;
+
+    // Show manager-only nav links
+    if (isManager) {
+        ['nav-dashboard','nav-create','nav-participants','nav-financial']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'inline-flex'; });
+    }
+
+    const statusLabels = { 0:'טיוטה', 1:'תכנון', 2:'הזמנות נשלחו', 3:'סופי' };
+    const statusClasses = { 0:'badge-orange', 1:'badge-blue', 2:'badge-green', 3:'badge-green' };
+
+    async function loadDashboard() {
+        try {
+            const [evRes, pRes] = await Promise.all([
+                fetch('/api/events/my/managed', { headers: hdr }),
+                fetch('/api/person', { headers: hdr })
+            ]);
+            const events = evRes.ok ? await evRes.json() : [];
+            const allPeople = pRes.ok ? await pRes.json() : [];
+
+            // סטטיסטיקות
+            const allPartIds = [...new Set(events.flatMap(e => e.participantIds))];
+            const allPollIds = [...new Set(events.flatMap(e => e.pollIds))];
+            const pending = allPeople.filter(p => allPartIds.includes(p.id) && p.isAttending === null);
+
+            document.getElementById('stat-events').textContent = events.length;
+            document.getElementById('stat-participants').textContent = allPartIds.length;
+            document.getElementById('stat-polls').textContent = allPollIds.length;
+            document.getElementById('stat-pending').textContent = pending.length;
+
+            // טבלת אירועים
+            document.getElementById('events-loading').style.display = 'none';
+            if (events.length) {
+                document.getElementById('events-table').style.display = 'table';
+                document.getElementById('events-tbody').innerHTML = events.map(e => `
+                    <tr>
+                        <td><strong>${e.name}</strong></td>
+                        <td>${new Date(e.date).toLocaleDateString('he-IL')}</td>
+                        <td>${e.location || 'טרם נקבע'}</td>
+                        <td><span class="badge badge-blue">${e.participantIds.length}</span></td>
+                        <td><span class="badge badge-blue">${e.pollIds.length}</span></td>
+                        <td><span class="badge ${statusClasses[e.status] || 'badge-orange'}">${statusLabels[e.status] || e.status}</span></td>
+                        <td>
+                            <a class="btn btn-blue" style="padding:4px 10px;font-size:.78rem" href="events.html">ניהול</a>
+                            <a class="btn btn-green" style="padding:4px 10px;font-size:.78rem;margin-right:4px" href="participants.html?eventId=${e.id}">משתתפים</a>
+                        </td>
+                    </tr>`).join('');
+            } else {
+                document.getElementById('events-loading').textContent = 'אין אירועים עדיין. לחץ "צור אירוע" כדי להתחיל.';
+                document.getElementById('events-loading').style.display = 'block';
+            }
+        } catch {
+            document.getElementById('events-loading').textContent = 'שגיאת חיבור לשרת.';
+        }
+    }
+
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+    loadDashboard();
+</script>
+</body>
+</html>

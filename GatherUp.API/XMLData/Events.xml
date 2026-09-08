@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ArrayOfEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Event id="500">
+    <Name>שבת גיבוש משפחתית 2025</Name>
+    <Date>2026-07-24T22:16:41.0764747+03:00</Date>
+    <Location>ירושלים</Location>
+    <PricePerParticipant>200</PricePerParticipant>
+    <EventManagerId>1</EventManagerId>
+    <EventHostId>10</EventHostId>
+    <PreliminaryPollId>1</PreliminaryPollId>
+    <InvitationMessage>אנו שמחים להזמין אותך לשבת גיבוש משפחתית מיוחדת!</InvitationMessage>
+    <PaymentDetails>העברה בנקאית: בנק הפועלים, סניף 12, חשבון 345678</PaymentDetails>
+    <HostInvitationScheduledAt xsi:nil="true" />
+    <HostInvitationSent>false</HostInvitationSent>
+    <ParticipantIds>
+      <int>101</int>
+      <int>102</int>
+      <int>103</int>
+    </ParticipantIds>
+    <VendorIds>
+      <int>1</int>
+    </VendorIds>
+    <PollIds>
+      <int>1</int>
+      <int>2</int>
+    </PollIds>
+    <Status>InvitationsSent</Status>
+  </Event>
+  <Event id="501">
+    <Name>מסיבת יום הולדת לרחל</Name>
+    <Date>2026-08-23T22:16:41.1405342+03:00</Date>
+    <Location>תל אביב</Location>
+    <PricePerParticipant>150</PricePerParticipant>
+    <EventManagerId>2</EventManagerId>
+    <EventHostId>11</EventHostId>
+    <PreliminaryPollId>3</PreliminaryPollId>
+    <InvitationMessage>מוזמן/ת למסיבת יום הולדת מפתיעה!</InvitationMessage>
+    <PaymentDetails>מזומן אצל שרה לוי</PaymentDetails>
+    <HostInvitationScheduledAt xsi:nil="true" />
+    <HostInvitationSent>false</HostInvitationSent>
+    <ParticipantIds>
+      <int>101</int>
+      <int>102</int>
+    </ParticipantIds>
+    <VendorIds>
+      <int>2</int>
+    </VendorIds>
+    <PollIds>
+      <int>3</int>
+    </PollIds>
+    <Status>Draft</Status>
+  </Event>
+  <Event id="502">
+    <Name>ערב יוקרתי</Name>
+    <Date>2026-06-24T00:00:00Z</Date>
+    <Location>רמת גן</Location>
+    <PricePerParticipant>0</PricePerParticipant>
+    <EventManagerId>1</EventManagerId>
+    <EventHostId>102</EventHostId>
+    <PreliminaryPollId xsi:nil="true" />
+    <InvitationMessage>אנו שמחים להזמינך להשתתף בערב יוקרתי ומפנק</InvitationMessage>
+    <PaymentDetails>מזומן אצל יהלה</PaymentDetails>
+    <HostInvitationScheduledAt xsi:nil="true" />
+    <HostInvitationSent>false</HostInvitationSent>
+    <ParticipantIds />
+    <VendorIds />
+    <PollIds />
+    <Status>Planning</Status>
+  </Event>
+  <Event id="503">
+    <Name>ערב שירה</Name>
+    <Date>2026-06-24T00:00:00Z</Date>
+    <Location>נס הרים</Location>
+    <PricePerParticipant>30</PricePerParticipant>
+    <EventManagerId>1</EventManagerId>
+    <EventHostId>1</EventHostId>
+    <PreliminaryPollId xsi:nil="true" />
+    <InvitationMessage>יססס</InvitationMessage>
+    <PaymentDetails>מזומן אצל רחל</PaymentDetails>
+    <HostInvitationScheduledAt xsi:nil="true" />
+    <HostInvitationSent>false</HostInvitationSent>
+    <ParticipantIds />
+    <VendorIds />
+    <PollIds />
+    <Status>Planning</Status>
+  </Event>
+  <Event id="504">
+    <Name>חגיגה</Name>
+    <Date>2026-06-24T00:00:00Z</Date>
+    <Location>י-ם</Location>
+    <PricePerParticipant>100</PricePerParticipant>
+    <EventManagerId>1</EventManagerId>
+    <EventHostId>102</EventHostId>
+    <PreliminaryPollId xsi:nil="true" />
+    <InvitationMessage>יססס</InvitationMessage>
+    <PaymentDetails>מזומן לבציון</PaymentDetails>
+    <HostInvitationScheduledAt xsi:nil="true" />
+    <HostInvitationSent>true</HostInvitationSent>
+    <ParticipantIds />
+    <VendorIds />
+    <PollIds />
+    <Status>Planning</Status>
+  </Event>
+</ArrayOfEvent>

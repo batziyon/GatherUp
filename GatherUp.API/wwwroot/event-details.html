@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – פרטי אירוע</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav { background: #34495e; display: flex; gap: 4px; padding: 8px 28px; flex-wrap: wrap; }
+        nav a { color: #ecf0f1; text-decoration: none; padding: 6px 13px; border-radius: 4px; font-size: .88rem; }
+        nav a:hover { background: #2c3e50; }
+        main { max-width: 800px; margin: 28px auto; padding: 0 20px; }
+        h2 { color: #2c3e50; margin-bottom: 20px; }
+        .event-banner { background: linear-gradient(135deg, #2c3e50, #2980b9); color: white; border-radius: 10px; padding: 26px; margin-bottom: 22px; }
+        .event-banner h3 { font-size: 1.4rem; margin-bottom: 10px; }
+        .event-banner .meta { display: flex; gap: 20px; flex-wrap: wrap; font-size: .88rem; opacity: .9; }
+        .event-banner .meta span { display: flex; align-items: center; gap: 5px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: .78rem; }
+        .badge-green  { background: #d5f5e3; color: #1e8449; }
+        .badge-red    { background: #fadbd8; color: #a93226; }
+        .badge-orange { background: #fdebd0; color: #935116; }
+        .badge-blue   { background: #d6eaf8; color: #1a5276; }
+        .status-white { background: rgba(255,255,255,.25); color: white; }
+        .section { background: white; border-radius: 8px; padding: 22px; margin-bottom: 16px; box-shadow: 0 2px 5px rgba(0,0,0,.07); }
+        .section h4 { color: #2c3e50; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #eee; font-size: 1rem; }
+        .detail-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: .9rem; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row strong { min-width: 150px; color: #555; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        button, .btn-link { padding: 10px 22px; border: none; border-radius: 6px; cursor: pointer; font-size: .9rem; text-decoration: none; display: inline-block; }
+        .btn-blue   { background: #2980b9; color: white; }
+        .btn-blue:hover   { background: #1f618d; }
+        .btn-green  { background: #27ae60; color: white; }
+        .btn-green:hover  { background: #1e8449; }
+        .btn-red    { background: #e74c3c; color: white; }
+        .btn-red:hover    { background: #c0392b; }
+        .btn-purple { background: #8e44ad; color: white; }
+        .btn-purple:hover { background: #6c3483; }
+        .btn-gray   { background: #ecf0f1; color: #333; }
+        .poll-pill { display: inline-block; padding: 6px 14px; background: #f0e6ff; color: #6c3483; border-radius: 20px; font-size: .84rem; margin: 4px; cursor: pointer; text-decoration: none; }
+        .poll-pill:hover { background: #d8c1f7; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
+        .search-bar label { font-size: .85rem; color: #555; display: block; margin-bottom: 3px; }
+        .search-bar input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: .9rem; }
+        .loading { color: #888; text-align: center; padding: 40px; }
+        .invitation-box { background: #fffde7; border: 1px solid #f9ca24; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+        .invitation-box p { font-size: .9rem; color: #333; line-height: 1.6; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎉 GatherUp – פרטי אירוע</h1>
+    <span id="header-user" style="font-size:.88rem;opacity:.85"></span>
+</header>
+<nav>
+    <a href="index.html">🏠 ראשי</a>
+    <a href="my-events.html">🎫 האירועים שלי</a>
+    <a href="events.html">📋 כל האירועים</a>
+    <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+</nav>
+<main>
+    <div class="search-bar">
+        <div>
+            <label>מזהה אירוע</label>
+            <input id="event-id" type="number" min="1" />
+        </div>
+        <button class="btn-blue" onclick="loadEvent()">טען אירוע</button>
+    </div>
+    <div id="event-container"><div class="loading">הזן מזהה אירוע ולחץ "טען אירוע"</div></div>
+</main>
+<script>
+    if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+    const user      = JSON.parse(sessionStorage.getItem('user'));
+    const token     = user.token;
+    const myId      = user.id;
+    const isManager = user.role === 'Manager';
+    const hdr       = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    document.getElementById('header-user').textContent = user.name;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('eventId')) {
+        document.getElementById('event-id').value = params.get('eventId');
+        loadEvent();
+    }
+
+    const statusMap = { 0: ['📝 טיוטה', 'badge-orange'], 1: ['📅 תכנון', 'badge-blue'], 2: ['📧 הזמנות נשלחו', 'badge-blue'], 3: ['✅ סופי', 'badge-green'] };
+
+    async function loadEvent() {
+        const id  = parseInt(document.getElementById('event-id').value);
+        const box = document.getElementById('event-container');
+        if (!id || id < 1) { box.innerHTML = '<div style="color:#e74c3c">נא להזין מזהה תקין</div>'; return; }
+        box.innerHTML = '<div class="loading">טוען...</div>';
+        try {
+            const [evRes, meRes] = await Promise.all([
+                fetch(`/api/events/${id}`),
+                fetch(`/api/participants/${myId}`, { headers: hdr })
+            ]);
+            if (!evRes.ok) { box.innerHTML = '<div style="color:#e74c3c">אירוע לא נמצא</div>'; return; }
+            const ev = await evRes.json();
+            const me = meRes.ok ? await meRes.json() : null;
+            renderEvent(ev, me, id);
+        } catch { box.innerHTML = '<div style="color:#e74c3c">שגיאת חיבור</div>'; }
+    }
+
+    function renderEvent(ev, me, eventId) {
+        const box   = document.getElementById('event-container');
+        const [statusLabel, statusClass] = statusMap[ev.status] || ['לא ידוע', 'badge-orange'];
+        const amIn  = ev.participantIds.includes(myId);
+        const attStatus = me?.isAttending === true ? 'attending' : me?.isAttending === false ? 'declined' : 'pending';
+
+        box.innerHTML = `
+            <div class="event-banner">
+                <h3>🎉 ${esc(ev.name)}</h3>
+                <div class="meta">
+                    <span>📅 ${new Date(ev.date).toLocaleDateString('he-IL')}</span>
+                    <span>📍 ${esc(ev.location || 'טרם נקבע')}</span>
+                    <span>💰 ${ev.pricePerParticipant}₪</span>
+                    <span class="badge status-white">${statusLabel}</span>
+                </div>
+            </div>
+
+            ${ev.invitationMessage ? `<div class="invitation-box">
+                <p>📩 <strong>הזמנה:</strong> "${esc(ev.invitationMessage)}"</p>
+                ${ev.paymentDetails ? `<p>💳 <strong>פרטי תשלום:</strong> ${esc(ev.paymentDetails)}</p>` : ''}
+            </div>` : ''}
+
+            <div class="section">
+                <h4>📋 פרטי האירוע</h4>
+                <div class="detail-row"><strong>מזהה:</strong><span>${ev.id}</span></div>
+                <div class="detail-row"><strong>שם:</strong><span>${esc(ev.name)}</span></div>
+                <div class="detail-row"><strong>תאריך:</strong><span>${new Date(ev.date).toLocaleDateString('he-IL')}</span></div>
+                <div class="detail-row"><strong>מיקום:</strong><span>${esc(ev.location || 'טרם נקבע')}</span></div>
+                <div class="detail-row"><strong>מחיר:</strong><span>${ev.pricePerParticipant}₪</span></div>
+                <div class="detail-row"><strong>מספר משתתפים:</strong><span>${ev.participantIds.length}</span></div>
+                <div class="detail-row"><strong>סקרים:</strong><span>${ev.pollIds.length}</span></div>
+            </div>
+
+            ${amIn ? `
+            <div class="section">
+                <h4>👤 הסטטוס שלי</h4>
+                <div class="detail-row"><strong>אישור הגעה:</strong><span>${
+                    attStatus === 'attending' ? '<span class="badge badge-green">✅ מגיע/ה</span>' :
+                    attStatus === 'declined'  ? '<span class="badge badge-red">❌ לא מגיע/ה</span>' :
+                                               '<span class="badge badge-orange">⏳ ממתין לאישור</span>'
+                }</span></div>
+                <div class="detail-row"><strong>תשלום:</strong><span>${
+                    me?.hasPaid
+                        ? `<span class="badge badge-green">✅ שולם ${me.amountContributed}₪</span>`
+                        : '<span class="badge badge-red">❌ טרם שולם</span>'
+                }</span></div>
+                <div class="btn-row" style="margin-top:14px">
+                    <a class="btn-link btn-green" href="rsvp.html?eventId=${eventId}">📩 עדכן אישור הגעה</a>
+                    ${!me?.hasPaid ? `<a class="btn-link btn-blue" href="payment.html?eventId=${eventId}">💳 שלם עכשיו</a>` : ''}
+                    <a class="btn-link btn-gray" href="notification-preferences.html?participantId=${myId}">⚙️ העדפות דיוור</a>
+                </div>
+            </div>` : ''}
+
+            ${ev.pollIds.length ? `
+            <div class="section">
+                <h4>📊 סקרים לאירוע</h4>
+                ${ev.pollIds.map(pid => `
+                    <a class="poll-pill" href="poll-vote.html?pollId=${pid}">🗳️ סקר #${pid}</a>
+                    <a class="poll-pill" href="poll-results.html?pollId=${pid}" style="background:#d6eaf8;color:#1a5276">📊 תוצאות #${pid}</a>
+                `).join('')}
+            </div>` : ''}`;
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+</script>
+</body>
+</html>

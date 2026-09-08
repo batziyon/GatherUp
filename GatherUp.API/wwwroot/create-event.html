@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <title>GatherUp – יצירת אירוע</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav a { color: #ccc; text-decoration: none; margin-left: 14px; font-size: 0.88rem; }
+        nav a:hover { color: white; }
+        main { max-width: 600px; margin: 36px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .card h2 { color: #2c3e50; margin-bottom: 22px; }
+        label { display: block; font-size: 0.88rem; color: #555; margin-bottom: 4px; margin-top: 14px; }
+        input, select { width: 100%; padding: 9px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.92rem; background: white; }
+        input:focus, select:focus { outline: none; border-color: #2980b9; }
+        .btn-row { display: flex; gap: 10px; margin-top: 22px; }
+        button { padding: 10px 22px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem; }
+        .btn-green { background: #27ae60; color: white; }
+        .btn-green:hover { background: #1e8449; }
+        .btn-gray { background: #ecf0f1; color: #333; }
+        .btn-gray:hover { background: #d5d8dc; }
+        .msg { font-size: 0.85rem; min-height: 18px; margin-top: 10px; }
+        .err { color: #e74c3c; }
+        .ok  { color: #27ae60; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎉 GatherUp – יצירת אירוע חדש</h1>
+        <nav>
+            <a href="index.html">ראשי</a>
+            <a href="events.html">אירועים</a>
+            <a href="financial.html">כספים</a>
+            <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+        </nav>
+    </header>
+    <main>
+        <div class="card">
+            <h2>➕ יצירת אירוע חדש</h2>
+
+            <label>שם האירוע *</label>
+            <input id="c-name" type="text" placeholder="שבת גיבוש משפחתית" />
+
+            <label>תאריך *</label>
+            <input id="c-date" type="date" />
+
+            <label>מיקום</label>
+            <input id="c-location" type="text" placeholder="ירושלים" />
+
+            <label>מחיר למשתתף (₪)</label>
+            <input id="c-price" type="number" min="0" value="0" />
+
+            <label>בעל האירוע (Host) *</label>
+            <select id="c-host">
+                <option value="">טוען בעלי אירועים...</option>
+            </select>
+
+            <hr style="margin:20px 0;border:none;border-top:1px solid #eee" />
+            <p style="font-size:.82rem;color:#888;margin-bottom:8px">📝 שדות אלה ישלחו לכל משתתף בהזמנה (שלב ג')</p>
+
+            <label>תוכן ההזמנה (טקסט חופשי)</label>
+            <textarea id="c-invitation" rows="3" placeholder="אנו שמחים להזמין אותך לאירוע..." style="width:100%;padding:9px 12px;border:1px solid #ccc;border-radius:5px;font-size:.92rem;resize:vertical"></textarea>
+
+            <label>פרטי תשלום (אפשרויות ואופן תשלום)</label>
+            <textarea id="c-payment" rows="2" placeholder="העברה בנקאית: בנק לאומי חשבון 123-456 / מזומן אצל יוסי" style="width:100%;padding:9px 12px;border:1px solid #ccc;border-radius:5px;font-size:.92rem;resize:vertical"></textarea>
+
+            <div class="msg" id="msg"></div>
+            <div class="btn-row">
+                <button class="btn-green" onclick="submitNewEvent()">✅ צור אירוע</button>
+                <button class="btn-gray"  onclick="window.location.replace('events.html')">ביטול</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ── Guard: must be logged in ──────────────────────────────────────────
+        const _raw = sessionStorage.getItem('user');
+        if (!_raw) { window.location.replace('login.html'); throw new Error('not logged in'); }
+
+        let user;
+        try { user = JSON.parse(_raw); } catch(e) { sessionStorage.removeItem('user'); window.location.replace('login.html'); throw e; }
+
+        // role can arrive as "Manager" or "manager" – normalise
+        const userRole = (user.role || user.Role || '').toLowerCase();
+        if (userRole !== 'manager') {
+            alert('גישה למנהלים בלבד');
+            window.location.replace('index.html');
+            throw new Error('not a manager');
+        }
+
+        // token / id can be camelCase or PascalCase depending on serialiser settings
+        const token = user.token || user.Token || '';
+        const myId  = user.id    || user.Id    || 0;
+        const hdr   = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+        // set today as default date
+        document.getElementById('c-date').value = new Date().toISOString().split('T')[0];
+
+        // ── Load event hosts ──────────────────────────────────────────────────
+        (async () => {
+            const sel = document.getElementById('c-host');
+            try {
+                const res = await fetch('/api/eventhost', { headers: hdr });
+                if (res.ok) {
+                    const hosts = await res.json();
+                    if (hosts && hosts.length > 0) {
+                        sel.innerHTML = hosts.map(h =>
+                            `<option value="${h.id || h.Id}">${h.name || h.Name} — ${h.email || h.Email}</option>`
+                        ).join('');
+                    } else {
+                        sel.innerHTML = '<option value="">אין בעלי אירועים רשומים</option>';
+                    }
+                } else if (res.status === 401 || res.status === 403) {
+                    // token expired – redirect to login
+                    sessionStorage.removeItem('user');
+                    window.location.replace('login.html');
+                } else {
+                    sel.innerHTML = '<option value="">שגיאה בטעינת בעלי אירועים</option>';
+                }
+            } catch (e) {
+                console.error('loadHosts error:', e);
+                sel.innerHTML = '<option value="">שגיאת חיבור לשרת</option>';
+            }
+        })();
+
+        // ── Submit ────────────────────────────────────────────────────────────
+        async function submitNewEvent() {
+            const msg = document.getElementById('msg');
+            msg.className = 'msg';
+            msg.textContent = '';
+
+            const name    = document.getElementById('c-name').value.trim();
+            const dateVal = document.getElementById('c-date').value;
+            const loc     = document.getElementById('c-location').value.trim() || null;
+            const price   = parseFloat(document.getElementById('c-price').value) || 0;
+            const hostRaw = document.getElementById('c-host').value;
+            const hostId  = parseInt(hostRaw, 10);
+
+            // Validate
+            if (!name)              { showErr('נא להזין שם אירוע'); return; }
+            if (!dateVal)           { showErr('נא לבחור תאריך'); return; }
+            if (!hostRaw || isNaN(hostId) || hostId <= 0) {
+                showErr('נא לבחור בעל אירוע מהרשימה');
+                return;
+            }
+
+            // Build payload — send noon UTC to avoid timezone-off-by-one
+            const body = {
+                name,
+                date:                dateVal + 'T12:00:00',
+                location:            loc,
+                pricePerParticipant: price,
+                eventManagerId:      myId,
+                eventHostId:         hostId,
+                invitationMessage:   document.getElementById('c-invitation').value.trim() || null,
+                paymentDetails:      document.getElementById('c-payment').value.trim() || null
+            };
+
+            // Disable button to prevent double-submit
+            const btn = document.querySelector('.btn-green');
+            btn.disabled = true;
+            btn.textContent = '⏳ יוצר...';
+
+            try {
+                const res = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: hdr,
+                    body: JSON.stringify(body)
+                });
+
+                const responseText = await res.text();
+                let d = {};
+                try { d = JSON.parse(responseText); } catch(_) {}
+
+                if (res.ok) {
+                    msg.className = 'msg ok';
+                    msg.textContent = `✅ האירוע "${d.name}" נוצר בהצלחה! (ID: ${d.id})`;
+                    setTimeout(() => window.location.replace('events.html'), 1400);
+                } else if (res.status === 401 || res.status === 403) {
+                    sessionStorage.removeItem('user');
+                    window.location.replace('login.html');
+                } else {
+                    const errMsg = d.message || d.title || d.detail || responseText || `שגיאה ${res.status}`;
+                    showErr('שגיאה ביצירת האירוע: ' + errMsg);
+                }
+            } catch (err) {
+                console.error('submitNewEvent error:', err);
+                showErr('שגיאת חיבור לשרת – ודא שהשרת פועל');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✅ צור אירוע';
+            }
+        }
+
+        function showErr(txt) {
+            const msg = document.getElementById('msg');
+            msg.className = 'msg err';
+            msg.textContent = txt;
+        }
+
+        function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+    </script>
+</body>
+</html>

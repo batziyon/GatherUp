@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – הצבעה בסקר</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav { background: #34495e; display: flex; gap: 4px; padding: 8px 28px; }
+        nav a { color: #ecf0f1; text-decoration: none; padding: 6px 13px; border-radius: 4px; font-size: .88rem; }
+        nav a:hover { background: #2c3e50; }
+        main { max-width: 700px; margin: 28px auto; padding: 0 20px; }
+        h2 { color: #2c3e50; margin-bottom: 20px; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 24px; align-items: flex-end; }
+        .search-bar label { font-size: .85rem; color: #555; display: block; margin-bottom: 3px; }
+        .search-bar input { padding: 9px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: .95rem; width: 130px; }
+        .btn-blue { padding: 9px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: .9rem; }
+        .btn-blue:hover { background: #1f618d; }
+        .poll-card { background: white; border-radius: 10px; padding: 26px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .poll-header { margin-bottom: 22px; }
+        .poll-header h3 { color: #2c3e50; font-size: 1.15rem; margin-bottom: 8px; }
+        .poll-header p { color: #666; font-size: .86rem; }
+        .question-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+        .question-card h4 { color: #2c3e50; margin-bottom: 14px; font-size: .95rem; }
+        .option-btn { display: block; width: 100%; text-align: right; padding: 11px 16px; margin-bottom: 8px;
+                      border: 2px solid #dee2e6; border-radius: 6px; background: white; cursor: pointer;
+                      font-size: .9rem; color: #333; transition: all .2s; }
+        .option-btn:hover { border-color: #2980b9; background: #eaf4fb; }
+        .option-btn.selected { border-color: #27ae60; background: #eafaf1; color: #1e8449; font-weight: bold; }
+        .submit-btn { width: 100%; padding: 13px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .submit-btn:hover { background: #1e8449; }
+        .submit-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+        .msg { text-align: center; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: .9rem; min-height: 20px; }
+        .msg.ok  { background: #d5f5e3; color: #1e8449; }
+        .msg.err { background: #fadbd8; color: #a93226; }
+        .closed-notice { background: #fadbd8; color: #a93226; padding: 14px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 16px; }
+        .info-box { color: #888; text-align: center; padding: 40px; }
+        .error-box { background: #fce4e4; color: #a93226; padding: 14px; border-radius: 6px; }
+        .results-link { display: block; text-align: center; margin-top: 14px; color: #2980b9; text-decoration: none; font-size: .88rem; }
+        .results-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎉 GatherUp – הצבעה בסקר</h1>
+    <span id="header-user" style="font-size:.88rem;opacity:.85"></span>
+</header>
+<nav>
+    <a href="index.html">🏠 ראשי</a>
+    <a href="events.html">📋 אירועים</a>
+    <a href="my-events.html">🎫 האירועים שלי</a>
+    <a href="poll-results.html">📊 תוצאות</a>
+    <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+</nav>
+<main>
+    <h2>🗳️ הצבעה בסקר</h2>
+    <div class="search-bar">
+        <div>
+            <label>מזהה סקר</label>
+            <input id="poll-id" type="number" min="1" value="1" />
+        </div>
+        <button class="btn-blue" onclick="loadPoll()">טען סקר</button>
+    </div>
+    <div id="poll-container"><div class="info-box">הזן מזהה סקר ולחץ "טען סקר"</div></div>
+</main>
+<script>
+    if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+    const user  = JSON.parse(sessionStorage.getItem('user'));
+    const token = user.token;
+    const myId  = user.id;
+    const hdr   = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    document.getElementById('header-user').textContent = user.name;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('pollId')) {
+        document.getElementById('poll-id').value = params.get('pollId');
+        loadPoll();
+    }
+
+    let currentPoll   = null;
+    let selections    = {}; // questionId -> answer
+
+    async function loadPoll() {
+        const id  = parseInt(document.getElementById('poll-id').value);
+        const box = document.getElementById('poll-container');
+        if (!id || id < 1) { box.innerHTML = '<div class="error-box">נא להזין מזהה תקין</div>'; return; }
+        box.innerHTML = '<div class="info-box">טוען...</div>';
+        try {
+            const [res, openRes] = await Promise.all([
+                fetch(`/api/polls/${id}/results`),
+                fetch(`/api/polls/${id}/open`)
+            ]);
+            if (!res.ok) { box.innerHTML = `<div class="error-box">❌ סקר ${id} לא נמצא</div>`; return; }
+            currentPoll    = await res.json();
+            const isOpen   = openRes.ok ? await openRes.json() : true;
+            selections     = {};
+            renderPoll(currentPoll, isOpen, id);
+        } catch { box.innerHTML = '<div class="error-box">שגיאת חיבור</div>'; }
+    }
+
+    function renderPoll(poll, isOpen, pollId) {
+        const box = document.getElementById('poll-container');
+        if (!isOpen) {
+            box.innerHTML = `<div class="poll-card">
+                <div class="poll-header"><h3>📊 ${esc(poll.name)}</h3></div>
+                <div class="closed-notice">⛔ שאלון זה סגור — לא ניתן להצביע</div>
+                <a class="results-link" href="poll-results.html?pollId=${pollId}">📊 צפה בתוצאות ←</a>
+            </div>`;
+            return;
+        }
+        box.innerHTML = `
+            <div class="poll-card">
+                <div class="poll-header">
+                    <h3>📊 ${esc(poll.name)}</h3>
+                    ${poll.description ? `<p>${esc(poll.description)}</p>` : ''}
+                    ${poll.closingDate ? `<p style="color:#e67e22;margin-top:6px">📅 סגירה: ${new Date(poll.closingDate).toLocaleDateString('he-IL')}</p>` : ''}
+                </div>
+                ${poll.questionResults.map(qr => renderQuestion(qr)).join('')}
+                <button class="submit-btn" id="submit-btn" onclick="submitAll(${pollId})">✅ שלח הצבעות</button>
+                <div class="msg" id="submit-msg"></div>
+                <a class="results-link" href="poll-results.html?pollId=${pollId}">📊 צפה בתוצאות ←</a>
+            </div>`;
+    }
+
+    function renderQuestion(qr) {
+        return `<div class="question-card">
+            <h4>❓ ${esc(qr.questionText)}</h4>
+            ${qr.stats.map(s => `
+                <button class="option-btn" id="opt-${qr.questionId}-${esc(s.option)}"
+                        onclick="selectOption(${qr.questionId}, '${s.option.replace(/'/g,"\\'")}')">
+                    ${esc(s.option)}
+                </button>`).join('')}
+        </div>`;
+    }
+
+    function selectOption(questionId, option) {
+        // בטל סימון קודם
+        document.querySelectorAll(`[id^="opt-${questionId}-"]`).forEach(b => b.classList.remove('selected'));
+        const btn = document.getElementById(`opt-${questionId}-${option}`);
+        if (btn) btn.classList.add('selected');
+        selections[questionId] = option;
+    }
+
+    async function submitAll(pollId) {
+        const msg = document.getElementById('submit-msg');
+        const btn = document.getElementById('submit-btn');
+        msg.textContent = ''; msg.className = 'msg';
+
+        if (!currentPoll) return;
+        const qIds = currentPoll.questionResults.map(qr => qr.questionId);
+        const missing = qIds.filter(id => !selections[id]);
+        if (missing.length > 0) {
+            msg.className = 'msg err';
+            msg.textContent = `נא לבחור תשובה לכל ${missing.length} שאלות`;
+            return;
+        }
+
+        btn.disabled = true; btn.textContent = 'שולח...';
+        let errors = 0;
+        for (const qId of qIds) {
+            const res = await fetch(`/api/polls/${pollId}/vote`, {
+                method: 'POST', headers: hdr,
+                body: JSON.stringify({ questionId: qId, participantId: myId, answer: selections[qId] })
+            });
+            if (!res.ok) errors++;
+        }
+        btn.disabled = false; btn.textContent = '✅ שלח הצבעות';
+        if (errors === 0) {
+            msg.className = 'msg ok';
+            msg.textContent = '✅ הצבעותיך נרשמו בהצלחה!';
+            setTimeout(() => window.location.href = `poll-results.html?pollId=${pollId}`, 1500);
+        } else {
+            msg.className = 'msg err';
+            msg.textContent = `שגיאה ב-${errors} הצבעות`;
+        }
+    }
+
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+</script>
+</body>
+</html>

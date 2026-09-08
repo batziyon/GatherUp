@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GatherUp – כניסה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',Arial,sans-serif;background:linear-gradient(135deg,#1a202c 0%,#2d3748 50%,#1a365d 100%);
+  min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;direction:rtl}
+.login-wrapper{width:100%;max-width:420px}
+.login-brand{text-align:center;margin-bottom:32px}
+.login-brand h1{font-size:2rem;font-weight:700;color:#fff;letter-spacing:-1px}
+.login-brand h1 span{color:#63b3ed}
+.login-brand p{color:#a0aec0;font-size:.9rem;margin-top:6px}
+.login-card{background:#fff;border-radius:20px;padding:36px 40px;box-shadow:0 24px 64px rgba(0,0,0,.35)}
+.login-card h2{font-size:1.25rem;font-weight:700;color:#1a202c;margin-bottom:24px;text-align:center}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.82rem;font-weight:600;color:#4a5568;margin-bottom:6px}
+.field input{width:100%;padding:12px 14px;border:2px solid #e2e8f0;border-radius:10px;
+  font-size:.95rem;font-family:'Heebo',Arial,sans-serif;color:#2d3748;transition:border-color .2s}
+.field input:focus{outline:none;border-color:#4299e1}
+#msg{font-size:.85rem;text-align:center;min-height:20px;margin-bottom:14px;color:#c53030;
+  padding:8px;border-radius:8px;display:none}
+#msg.show{display:block;background:#fff5f5}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#4299e1,#3182ce);
+  color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;
+  font-family:'Heebo',Arial,sans-serif;cursor:pointer;transition:opacity .2s}
+.btn-login:hover{opacity:.9}
+.btn-login:disabled{opacity:.55;cursor:not-allowed}
+.login-footer{text-align:center;margin-top:18px;font-size:.85rem;color:#718096}
+.login-footer a{color:#4299e1;text-decoration:none;font-weight:500}
+.login-footer a:hover{text-decoration:underline}
+.divider{border:none;border-top:1px solid #e2e8f0;margin:22px 0}
+</style>
+</head>
+<body>
+<div class="login-wrapper">
+  <div class="login-brand">
+    <h1>Gather<span>Up</span> 🎉</h1>
+    <p>מערכת ניהול אירועים חכמה</p>
+  </div>
+  <div class="login-card">
+    <h2>כניסה לחשבון</h2>
+    <div class="field">
+      <label>כתובת מייל</label>
+      <input id="email" type="email" placeholder="example@gmail.com" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label>סיסמה</label>
+      <input id="password" type="password" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') login()"/>
+    </div>
+    <div id="msg"></div>
+    <button class="btn-login" id="btn" onclick="login()">כניסה</button>
+    <hr class="divider"/>
+    <div class="login-footer">אין לך חשבון? <a href="register.html">הרשמה</a></div>
+  </div>
+</div>
+<script>
+  if (sessionStorage.getItem('user')) window.location.replace('index.html');
+  async function login() {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const msg      = document.getElementById('msg');
+    const btn      = document.getElementById('btn');
+    msg.textContent = ''; msg.className = '';
+    if (!email)           { showMsg('נא להזין כתובת מייל'); return; }
+    if (!email.includes('@')) { showMsg('כתובת מייל לא תקינה'); return; }
+    if (!password)        { showMsg('נא להזין סיסמה'); return; }
+    btn.disabled = true; btn.textContent = 'מתחבר...';
+    try {
+      const res = await fetch('/api/auth/login', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ email, password })
+      });
+      if (res.ok) {
+        sessionStorage.setItem('user', JSON.stringify(await res.json()));
+        window.location.replace('index.html');
+      } else {
+        showMsg(res.status === 401 ? 'המייל או הסיסמה שגויים' : 'שגיאה בשרת, נסה שנית');
+      }
+    } catch { showMsg('שגיאת חיבור – ודא שהשרת פועל'); }
+    finally  { btn.disabled = false; btn.textContent = 'כניסה'; }
+  }
+  function showMsg(t) {
+    const el = document.getElementById('msg');
+    el.textContent = '🔴 ' + t;
+    el.className = 'show';
+  }
+</script>
+</body>
+</html>

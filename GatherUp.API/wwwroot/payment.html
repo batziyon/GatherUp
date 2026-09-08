@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – תשלום</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f6f8; }
+        header { background: #2c3e50; color: white; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4rem; }
+        nav { background: #34495e; display: flex; gap: 4px; padding: 8px 28px; }
+        nav a { color: #ecf0f1; text-decoration: none; padding: 6px 13px; border-radius: 4px; font-size: .88rem; }
+        nav a:hover { background: #2c3e50; }
+        main { max-width: 620px; margin: 36px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+        .card h2 { color: #2c3e50; margin-bottom: 20px; }
+        .event-info { background: #f0f8f4; border: 1px solid #a9dfbf; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+        .event-info h3 { color: #1e8449; margin-bottom: 6px; }
+        .event-info p { font-size: .88rem; color: #444; line-height: 1.7; }
+        .amount-display { text-align: center; padding: 20px; background: #eaf4fb; border-radius: 8px; margin-bottom: 24px; }
+        .amount-display .amount { font-size: 2.5rem; font-weight: bold; color: #2980b9; }
+        .amount-display p { color: #666; font-size: .88rem; margin-top: 4px; }
+        label { display: block; font-size: .88rem; color: #555; margin-bottom: 4px; margin-top: 14px; }
+        input { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: .95rem; }
+        input:focus { outline: none; border-color: #2980b9; }
+        .btn-pay { width: 100%; padding: 14px; background: #27ae60; color: white; border: none; border-radius: 8px;
+                   font-size: 1.05rem; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        .btn-pay:hover { background: #1e8449; }
+        .btn-pay:disabled { background: #95a5a6; cursor: not-allowed; }
+        .msg { margin-top: 12px; padding: 12px; border-radius: 6px; font-size: .9rem; text-align: center; min-height: 20px; }
+        .msg.ok  { background: #d5f5e3; color: #1e8449; }
+        .msg.err { background: #fadbd8; color: #a93226; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
+        .search-bar label { font-size: .85rem; color: #555; display: block; margin-bottom: 3px; }
+        .search-bar input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: .9rem; }
+        .btn-blue { padding: 8px 18px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .security-note { font-size: .78rem; color: #888; text-align: center; margin-top: 10px; }
+        .already-paid { background: #d5f5e3; color: #1e8449; padding: 20px; border-radius: 8px; text-align: center; font-size: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🎉 GatherUp – תשלום</h1>
+    <span id="header-user" style="font-size:.88rem;opacity:.85"></span>
+</header>
+<nav>
+    <a href="index.html">🏠 ראשי</a>
+    <a href="my-events.html">🎫 האירועים שלי</a>
+    <a href="events.html">📋 כל האירועים</a>
+    <a href="#" onclick="logout()" style="color:#e74c3c">יציאה</a>
+</nav>
+<main>
+    <div class="search-bar">
+        <div>
+            <label>מזהה אירוע</label>
+            <input id="event-id-input" type="number" min="1" />
+        </div>
+        <button class="btn-blue" onclick="loadEvent()">טען אירוע</button>
+    </div>
+    <div id="payment-container"><div style="color:#888;text-align:center;padding:30px">הזן מזהה אירוע ולחץ "טען אירוע"</div></div>
+</main>
+<script>
+    if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+    const user  = JSON.parse(sessionStorage.getItem('user'));
+    const token = user.token;
+    const myId  = user.id;
+    const hdr   = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    document.getElementById('header-user').textContent = user.name;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('eventId')) {
+        document.getElementById('event-id-input').value = params.get('eventId');
+        loadEvent();
+    }
+
+    async function loadEvent() {
+        const eventId = parseInt(document.getElementById('event-id-input').value);
+        const box     = document.getElementById('payment-container');
+        if (!eventId || eventId < 1) { box.innerHTML = '<div style="color:#e74c3c">נא להזין מזהה תקין</div>'; return; }
+        box.innerHTML = '<div style="color:#888;text-align:center;padding:30px">טוען...</div>';
+        try {
+            const [evRes, pRes] = await Promise.all([
+                fetch(`/api/events/${eventId}`),
+                fetch(`/api/participants/${myId}`, { headers: hdr })
+            ]);
+            if (!evRes.ok) { box.innerHTML = '<div style="color:#e74c3c">אירוע לא נמצא</div>'; return; }
+            const ev = await evRes.json();
+            const me = pRes.ok ? await pRes.json() : null;
+            renderPayment(ev, me, eventId);
+        } catch { box.innerHTML = '<div style="color:#e74c3c">שגיאת חיבור</div>'; }
+    }
+
+    function renderPayment(ev, me, eventId) {
+        const box = document.getElementById('payment-container');
+        if (me?.hasPaid) {
+            box.innerHTML = `<div class="card">
+                <h2>💰 תשלום עבור אירוע</h2>
+                <div class="already-paid">✅ שילמת כבר ${me.amountContributed}₪ עבור האירוע "${esc(ev.name)}"</div>
+                <p style="text-align:center;margin-top:16px"><a href="my-events.html" style="color:#2980b9">← חזרה לאירועים שלי</a></p>
+            </div>`;
+            return;
+        }
+
+        // בדיקה: האם המשתמש אישר הגעה לאירוע זה?
+        const hasConfirmedAttendance = me?.isAttending === true;
+
+        box.innerHTML = `
+            <div class="card">
+                <h2>💰 תשלום עבור אירוע</h2>
+                <div class="event-info">
+                    <h3>🎉 ${esc(ev.name)}</h3>
+                    <p>📅 ${new Date(ev.date).toLocaleDateString('he-IL')}</p>
+                    <p>📍 ${esc(ev.location || 'טרם נקבע')}</p>
+                    ${ev.paymentDetails ? `<p>💳 ${esc(ev.paymentDetails)}</p>` : ''}
+                </div>
+                <div class="amount-display">
+                    <div class="amount">${ev.pricePerParticipant}₪</div>
+                    <p>סכום לתשלום</p>
+                </div>
+                ${!hasConfirmedAttendance ? `
+                <div class="msg err" style="background:#fdebd0;color:#935116;padding:14px;border-radius:8px;margin-bottom:16px;text-align:center">
+                    ⚠️ יש לאשר הגעה לאירוע לפני ביצוע תשלום.<br>
+                    <a href="events.html" style="color:#2980b9;font-size:.88rem">← לך לאישור הגעה</a>
+                </div>` : ''}
+                <label>שם בעל התשלום</label>
+                <input id="pay-name" type="text" value="${esc(user.name)}" readonly style="background:#f8f9fa" />
+                <label>סכום (₪)</label>
+                <input id="pay-amount" type="number" min="1" value="${ev.pricePerParticipant}" ${!hasConfirmedAttendance ? 'disabled' : ''} />
+                <label>מספר אסמכתא (אופציונלי)</label>
+                <input id="pay-ref" type="text" placeholder="12345678" ${!hasConfirmedAttendance ? 'disabled' : ''} />
+                <button class="btn-pay" id="pay-btn" onclick="submitPayment(${eventId})" ${!hasConfirmedAttendance ? 'disabled' : ''}>
+                    💳 אשר תשלום — ${ev.pricePerParticipant}₪
+                </button>
+                <div class="security-note">🔒 הפעולה מתועדת ומאובטחת</div>
+                <div class="msg" id="pay-msg"></div>
+            </div>`;
+    }
+
+    async function submitPayment(eventId) {
+        const msg = document.getElementById('pay-msg');
+        const btn = document.getElementById('pay-btn');
+        const amt = parseFloat(document.getElementById('pay-amount').value);
+        msg.textContent = ''; msg.className = 'msg';
+
+        if (!amt || amt <= 0) { msg.className = 'msg err'; msg.textContent = 'נא להזין סכום חיובי'; return; }
+
+        btn.disabled = true; btn.textContent = 'מעבד...';
+        const res = await fetch('/api/financial/payment', {
+            method: 'POST', headers: hdr,
+            body: JSON.stringify({ participantId: myId, eventId, amount: amt })
+        });
+        btn.disabled = false;
+        if (res.ok) {
+            msg.className = 'msg ok';
+            msg.textContent = `✅ תשלום של ${amt}₪ נרשם בהצלחה!`;
+            btn.textContent = '✅ שולם';
+            btn.style.background = '#27ae60';
+            setTimeout(() => window.location.href = 'register-success.html?type=payment', 1800);
+        } else {
+            const d = await res.json().catch(() => ({}));
+            msg.className = 'msg err';
+            msg.textContent = d.message || 'שגיאה בעיבוד התשלום';
+            btn.textContent = '💳 אשר תשלום';
+        }
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GatherUp – פרופיל והתראות</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Heebo', Arial, sans-serif; background: #f0f4f8; direction:rtl; }
+        /* ── Top Bar ── */
+        .topbar{position:sticky;top:0;z-index:200;background:#1a202c;color:#fff;
+          display:flex;justify-content:space-between;align-items:center;
+          padding:0 28px;height:56px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+        .topbar-brand{font-size:1.2rem;font-weight:700;color:#fff}
+        .topbar-brand span{color:#63b3ed}
+        .topbar-right{display:flex;align-items:center;gap:12px}
+        .topbar-user{font-size:.85rem;opacity:.85}
+        .btn-logout{background:transparent;border:1px solid rgba(255,255,255,.35);
+          color:#fff;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:.82rem;
+          font-family:'Heebo',Arial,sans-serif;transition:background .2s}
+        .btn-logout:hover{background:rgba(255,255,255,.12)}
+        /* ── Main Nav ── */
+        .mainnav{background:#2d3748;display:flex;justify-content:center;gap:4px;padding:0 28px;
+          border-bottom:1px solid rgba(255,255,255,.07)}
+        .mainnav a{color:#a0aec0;text-decoration:none;padding:14px 22px;font-size:.9rem;font-weight:500;
+          border-bottom:3px solid transparent;transition:all .2s;display:inline-block}
+        .mainnav a:hover{color:#fff;border-bottom-color:rgba(255,255,255,.3)}
+        .mainnav a.active{color:#63b3ed;border-bottom-color:#63b3ed}
+        main { max-width: 960px; margin: 28px auto; padding: 0 20px; }
+        h2 { color: #1a202c; margin-bottom: 20px; font-family:'Heebo',Arial,sans-serif; }
+        .section { background: white; border-radius: 14px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); border: 1px solid #e2e8f0; }
+        .section h3 { color: #2d3748; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; font-size: 1rem; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+        label { display: block; font-size: .85rem; color: #555; margin-bottom: 3px; }
+        input, select, textarea { padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; font-size: .9rem; }
+        input:focus, textarea:focus { outline: none; border-color: #2980b9; }
+        textarea { width: 100%; resize: vertical; min-height: 80px; }
+        button { padding: 8px 18px; border: none; border-radius: 5px; cursor: pointer; font-size: .86rem; }
+        .btn-blue   { background: #2980b9; color: white; }
+        .btn-blue:hover   { background: #1f618d; }
+        .btn-green  { background: #27ae60; color: white; }
+        .btn-green:hover  { background: #1e8449; }
+        .btn-orange { background: #e67e22; color: white; }
+        .btn-orange:hover { background: #ca6f1e; }
+        .msg { font-size: .84rem; min-height: 18px; }
+        .msg.ok  { color: #27ae60; }
+        .msg.err { color: #e74c3c; }
+        .notif-list { max-height: 320px; overflow-y: auto; }
+        .notif-item { display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid #f0f0f0; align-items: flex-start; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-icon { font-size: 1.4rem; min-width: 30px; text-align: center; }
+        .notif-body h4 { font-size: .9rem; color: #2c3e50; margin-bottom: 3px; }
+        .notif-body p { font-size: .82rem; color: #666; }
+        .notif-body .time { font-size: .75rem; color: #aaa; margin-top: 4px; }
+        .badge-blue   { background: #d6eaf8; color: #1a5276; }
+        .badge-green  { background: #d5f5e3; color: #1e8449; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: .75rem; margin-left: 6px; }
+        .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .action-card { background: #f8f9fa; border-radius: 8px; padding: 18px; border: 1px solid #eee; }
+        .action-card h4 { margin-bottom: 10px; color: #2c3e50; }
+        .action-card p { font-size: .83rem; color: #666; margin-bottom: 12px; }
+        .pending-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #eee; border-radius:6px; margin-bottom:8px; background:#fafafa; }
+        .pending-row .pname { font-weight:600; color:#2c3e50; }
+        .pending-row .pemail { font-size:.82rem; color:#888; margin-top:2px; }
+        .pending-actions { display:flex; gap:8px; }
+        .btn-approve { background:#27ae60; color:white; padding:6px 14px; border:none; border-radius:4px; cursor:pointer; font-size:.84rem; }
+        .btn-approve:hover { background:#1e8449; }
+        .btn-reject  { background:#e74c3c; color:white; padding:6px 14px; border:none; border-radius:4px; cursor:pointer; font-size:.84rem; }
+        .btn-reject:hover  { background:#c0392b; }
+    </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-brand">Gather<span>Up</span> 🎉</div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="header-user"></span>
+    <button class="btn-logout" onclick="logout()">יציאה</button>
+  </div>
+</div>
+<nav class="mainnav">
+  <a href="index.html">לוח מכוונים</a>
+  <a href="index.html" id="nav-create" style="display:none">יצירת אירוע</a>
+  <a href="notifications.html" class="active">פרופיל</a>
+</nav>
+<main>
+    <h2>🔔 מרכז התראות ומיילים</h2>
+
+    <!-- פעולות שליחה — מנהל בלבד -->
+    <div id="manager-section" style="display:none">
+        <div class="section">
+            <h3>📧 פעולות שליחה</h3>
+            <div class="actions-grid">
+                <div class="action-card">
+                    <h4>📨 שלח הזמנות לאירוע</h4>
+                    <p>שלח הזמנות אישיות לכל המשתתפים הממתינים. הלינק הייחודי נוצר אוטומטית לכל משתתף.</p>
+                    <div>
+                        <label>אירוע</label>
+                        <select id="inv-event" style="width:100%;margin-top:4px">
+                            <option value="">-- בחר אירוע --</option>
+                        </select>
+                    </div>
+                    <div class="msg" id="inv-msg"></div>
+                    <button class="btn-blue" style="margin-top:10px" onclick="sendInvitations()">📧 שלח הזמנות</button>
+                </div>
+                <div class="action-card">
+                    <h4>💰 תזכורות תשלום</h4>
+                    <p>שלח תזכורת תשלום למשתתפים שעדיין לא שילמו.</p>
+                    <div>
+                        <label>אירוע</label>
+                        <select id="rem-event" style="width:100%;margin-top:4px">
+                            <option value="">-- בחר אירוע --</option>
+                        </select>
+                        <input id="rem-bank" type="text" placeholder="פרטי חשבון בנק" style="width:100%;margin-top:6px" />
+                    </div>
+                    <div class="msg" id="rem-msg"></div>
+                    <button class="btn-green" style="margin-top:10px" onclick="sendReminders()">💰 שלח תזכורות</button>
+                </div>
+                <div class="action-card">
+                    <h4>🏠 הזמנת בעל אירוע</h4>
+                    <p>שלח הזמנה מיוחדת לבעל האירוע — הוא לא מעורב בבחירות ובגביית התשלום.</p>
+                    <div>
+                        <label>אירוע</label>
+                        <select id="host-event" style="width:100%;margin-top:4px">
+                            <option value="">-- בחר אירוע --</option>
+                        </select>
+                        <label style="margin-top:8px;display:block;font-size:.82rem;color:#555">תוכן ההזמנה *</label>
+                        <textarea id="host-msg" placeholder="שלום, אתה מוזמן לארח את האירוע..." style="margin-top:4px;width:100%"></textarea>
+                        <label style="margin-top:8px;display:block;font-size:.82rem;color:#555">מה בעל האירוע יכול לצפות?</label>
+                        <textarea id="host-expect" placeholder="האירוע כולל 30 אורחים, ארוחת ערב ומוזיקה חיה. לא נדרשת השתתפות בתשלום." style="margin-top:4px;width:100%;min-height:55px"></textarea>
+                    </div>
+                    <div class="msg" id="host-msg-status"></div>
+                    <button class="btn-orange" style="margin-top:10px" onclick="sendHostInvitation()">📩 שלח לבעל אירוע</button>
+                </div>
+                <div class="action-card">
+                    <h4>📊 עדכון שינויי אירוע</h4>
+                    <p>מנויים לקבל עדכון שינויים מקבלים מייל אוטומטי לאחר עריכת האירוע.</p>
+                    <p style="color:#27ae60;font-size:.82rem;margin-top:8px">✅ פועל אוטומטית בעת עדכון פרטי האירוע</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- אישור/דחיית הגעה — כפתורי Approve/Reject למנהל -->
+        <div class="section">
+            <h3>✅ אישור / דחיית הגעת משתתפים</h3>
+            <p style="color:#666;font-size:.86rem;margin-bottom:14px">
+                כאן תוכל לאשר או לדחות הגעה של משתתפים שטרם הגיבו להזמנה.
+            </p>
+            <div class="row" style="margin-bottom:12px">
+                <div>
+                    <label>אירוע</label>
+                    <select id="approve-event" onchange="loadPendingParticipants()" style="min-width:200px">
+                        <option value="">-- בחר אירוע --</option>
+                    </select>
+                </div>
+            </div>
+            <div id="pending-list" style="margin-top:8px"></div>
+            <div class="msg" id="approve-msg"></div>
+        </div>
+    </div>
+
+    <!-- יומן מיילים — מנהל: כל הלוג / משתתף: רק המיילים שלו -->
+    <div class="section">
+        <h3 id="log-section-title">📬 המיילים שנשלחו אליי</h3>
+        <p style="color:#666;font-size:.86rem;margin-bottom:14px" id="log-section-desc">
+            כאן מוצגים כל המיילים שנשלחו אליך מהמערכת — הזמנות, אישורי הגעה, תזכורות תשלום ועוד.
+            <button onclick="loadEmailLog()" style="margin-right:10px;padding:4px 12px;background:#2980b9;color:white;border:none;border-radius:4px;cursor:pointer;font-size:.8rem">🔄 רענן</button>
+        </p>
+        <div style="background:#1a202c;color:#a0ffb0;border-radius:10px;padding:16px;margin-top:8px;font-family:monospace;font-size:.78rem;line-height:1.8;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all" id="log-preview">
+            📂 טוען...
+        </div>
+    </div>
+
+    <!-- יומן מיילים של אירועים — מנהל בלבד -->
+    <div class="section" id="managed-emails-section" style="display:none">
+        <h3>📋 מיילים לפי אירוע</h3>
+        <p style="color:#666;font-size:.86rem;margin-bottom:14px">
+            כל המיילים שנשלחו לאירועים שאתה מנהל — הזמנות, תזכורות ועוד.
+        </p>
+        <div class="row" style="margin-bottom:12px">
+            <div>
+                <label>בחר אירוע</label>
+                <select id="log-event-select" onchange="loadEventEmailLog()" style="min-width:220px;margin-top:4px">
+                    <option value="">-- בחר אירוע לצפייה במיילים --</option>
+                </select>
+            </div>
+        </div>
+        <div id="event-emails-count" style="font-size:.82rem;color:#555;margin-bottom:8px"></div>
+        <div style="background:#1a202c;color:#a0ffb0;border-radius:10px;padding:16px;font-family:monospace;font-size:.78rem;line-height:1.8;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all" id="event-log-preview">
+            בחר אירוע לצפייה במיילים
+        </div>
+    </div>
+
+    <!-- היסטוריית אירועים -->
+    <div class="section">
+        <h3>📋 האירועים שלי</h3>
+        <div class="notif-list" id="notif-list">
+            <div style="color:#888;padding:16px;text-align:center">טוען...</div>
+        </div>
+    </div>
+</main>
+<script>
+    if (!sessionStorage.getItem('user')) window.location.replace('login.html');
+    const user      = JSON.parse(sessionStorage.getItem('user'));
+    const token     = user.token;
+    const isManager = user.role === 'Manager';
+    const hdr       = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+    document.getElementById('header-user').textContent = isManager ? `👑 ${user.name}` : user.name;
+    if (isManager) {
+        document.getElementById('manager-section').style.display = 'block';
+        document.getElementById('managed-emails-section').style.display = 'block';
+        document.getElementById('nav-create').style.display = 'inline-block';
+        document.getElementById('log-section-title').textContent = '📬 המיילים שנשלחו אליי';
+        document.getElementById('log-section-desc').innerHTML =
+            'המיילים שנשלחו לכתובת המייל שלך מהמערכת.' +
+            ' <button onclick="loadEmailLog()" style="margin-right:10px;padding:4px 12px;background:#4299e1;color:white;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:Heebo,Arial,sans-serif">🔄 רענן</button>';
+        loadManagedEventDropdowns();
+    }
+
+    async function loadManagedEventDropdowns() {
+        try {
+            const res = await fetch('/api/events/my/managed', { headers: hdr });
+            if (!res.ok) return;
+            const events = await res.json();
+            ['inv-event', 'rem-event', 'host-event', 'approve-event', 'log-event-select'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                events.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.id;
+                    opt.textContent = `${e.name} (ID: ${e.id})`;
+                    sel.appendChild(opt);
+                });
+            });
+        } catch {}
+    }
+
+    // ── Send invitations — base URL auto-generated, backend appends participantId ──
+    async function sendInvitations() {
+        const msg  = document.getElementById('inv-msg');
+        const eid  = parseInt(document.getElementById('inv-event').value);
+        msg.textContent = ''; msg.className = 'msg';
+        if (!eid) { msg.className = 'msg err'; msg.textContent = 'נא לבחור אירוע'; return; }
+
+        // The backend appends ?participantId=X&eventId=Y per participant automatically
+        const baseLink = `${window.location.origin}/rsvp.html`;
+        const res = await fetch(`/api/events/${eid}/invitations`, {
+            method: 'POST', headers: hdr, body: JSON.stringify({ registrationLink: baseLink })
+        });
+        if (res.ok) {
+            msg.className = 'msg ok';
+            msg.textContent = '✅ הזמנות נשלחו! כל משתתף קיבל לינק אישי עם ה-ID שלו.';
+            setTimeout(loadEmailLog, 1200);
+            loadActivity();
+        } else {
+            const d = await res.json().catch(() => ({}));
+            msg.className = 'msg err';
+            msg.textContent = d.message || 'שגיאה';
+        }
+    }
+
+    async function sendReminders() {
+        const msg  = document.getElementById('rem-msg');
+        const eid  = parseInt(document.getElementById('rem-event').value);
+        const bank = document.getElementById('rem-bank').value.trim();
+        msg.textContent = ''; msg.className = 'msg';
+        if (!eid)  { msg.className = 'msg err'; msg.textContent = 'נא לבחור אירוע'; return; }
+        if (!bank) { msg.className = 'msg err'; msg.textContent = 'נא להזין פרטי חשבון'; return; }
+        const res = await fetch(`/api/financial/event/${eid}/reminders`, {
+            method: 'POST', headers: hdr, body: JSON.stringify({ bankDetails: bank })
+        });
+        if (res.ok) {
+            msg.className = 'msg ok';
+            msg.textContent = '✅ תזכורות נשלחו!';
+            setTimeout(loadEmailLog, 1200);
+        } else {
+            const d = await res.json().catch(() => ({}));
+            msg.className = 'msg err';
+            msg.textContent = d.message || 'שגיאה';
+        }
+    }
+
+    async function sendHostInvitation() {
+        const msg    = document.getElementById('host-msg-status');
+        const eid    = parseInt(document.getElementById('host-event').value);
+        const content = document.getElementById('host-msg').value.trim();
+        const expect  = document.getElementById('host-expect').value.trim();
+        msg.textContent = ''; msg.className = 'msg';
+        if (!eid)     { msg.className = 'msg err'; msg.textContent = 'נא לבחור אירוע'; return; }
+        if (!content) { msg.className = 'msg err'; msg.textContent = 'נא להזין תוכן הזמנה'; return; }
+
+        // בנה את גוף ההזמנה כולל מה בעל האירוע יכול לצפות
+        const fullContent = expect
+            ? `${content}\n\n📋 מה לצפות:\n${expect}`
+            : content;
+
+        const res = await fetch(`/api/events/${eid}/host-invitation`, {
+            method: 'POST', headers: hdr, body: JSON.stringify({ hostMessageContent: fullContent })
+        });
+        if (res.ok) {
+            msg.className = 'msg ok';
+            msg.textContent = '✅ הזמנה נשלחה לבעל האירוע!';
+            setTimeout(loadEmailLog, 1200);
+        } else {
+            const d = await res.json().catch(() => ({}));
+            msg.className = 'msg err';
+            msg.textContent = d.message || 'שגיאה';
+        }
+    }
+
+    async function loadActivity() {
+        const el = document.getElementById('notif-list');
+        try {
+            const endpoint = isManager ? '/api/events/my/managed' : '/api/events/my/participating';
+            const res = await fetch(endpoint, { headers: hdr });
+            const events = res.ok ? await res.json() : [];
+            if (!events.length) {
+                el.innerHTML = '<div style="color:#888;padding:16px;text-align:center">אין אירועים עדיין</div>';
+                return;
+            }
+            el.innerHTML = events.map(e => {
+                const dateStr = new Date(e.date).toLocaleDateString('he-IL');
+                const desc = isManager
+                    ? `${e.participantIds.length} משתתפים • ${e.pollIds.length} סקרים • סטטוס: ${statusLabel(e.status)}`
+                    : `📅 ${dateStr} • 📍 ${e.location || 'טרם נקבע'} • 💰 ${e.pricePerParticipant}₪`;
+                return `<div class="notif-item">
+                    <div class="notif-icon">🎉</div>
+                    <div class="notif-body">
+                        <h4>${esc(e.name)}</h4>
+                        <p>${desc}</p>
+                        <div class="time">${dateStr}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch { el.innerHTML = '<div style="color:#e74c3c;padding:12px">שגיאת חיבור</div>'; }
+    }
+
+    function statusLabel(s) {
+        const map = { Draft:'טיוטה', Planning:'בתכנון', InvitationsSent:'הזמנות נשלחו', Finalized:'הסתיים' };
+        return map[s] || s;
+    }
+
+    // ── Load email log from server ────────────────────────────────────────────
+    async function loadEmailLog() {
+        const box = document.getElementById('log-preview');
+        box.innerHTML = '📂 טוען...';
+        try {
+            // מחזיר רק המיילים שנשלחו לכתובת המייל של המשתמש המחובר
+            const res = await fetch('/api/person/my/emails', { headers: hdr });
+            if (!res.ok) throw new Error('fetch failed');
+            const data = await res.json();
+            if (!data.length) {
+                box.innerHTML = '<span style="color:#aaa">📭 לא נשלחו אליך מיילים עדיין</span>';
+                return;
+            }
+            box.innerHTML = formatEmailEntries(data);
+            box.scrollTop = box.scrollHeight;
+        } catch {
+            box.innerHTML = '<span style="color:#e74c3c">שגיאה בטעינת המיילים</span>';
+        }
+    }
+
+    // ── Load emails for a specific managed event ──────────────────────────────
+    async function loadEventEmailLog() {
+        const eid     = parseInt(document.getElementById('log-event-select').value);
+        const box     = document.getElementById('event-log-preview');
+        const countEl = document.getElementById('event-emails-count');
+        countEl.textContent = '';
+        if (!eid) { box.textContent = 'בחר אירוע לצפייה במיילים'; return; }
+        box.textContent = '📂 טוען...';
+        try {
+            const res = await fetch(`/api/notifications/log/event/${eid}`, { headers: hdr });
+            if (!res.ok) {
+                box.textContent = res.status === 403 ? '🔒 גישה מותרת למנהל הארוע בלבד' : '⚠️ שגיאה';
+                return;
+            }
+            const data = await res.json();
+            const lines = data.lines || [];
+            if (!lines.length) {
+                box.innerHTML = '<span style="color:#aaa">📭 לא נשלחו מיילים לאירוע זה</span>';
+                return;
+            }
+            const emailCount = lines.filter(l => l.startsWith('[')).length;
+            countEl.textContent = `סה"כ ${emailCount} מיילים נשלחו לאירוע זה`;
+            box.innerHTML = formatEmailLines(lines);
+            box.scrollTop = box.scrollHeight;
+        } catch {
+            box.textContent = '⚠️ שגיאת חיבור לשרת';
+        }
+    }
+
+    // ── Format an array of EmailLogResponse objects ───────────────────────────
+    function formatEmailEntries(entries) {
+        return entries.map(e => {
+            const ts      = new Date(e.sentAt).toLocaleString('he-IL');
+            const header  = `<span style="color:#a8d8a8;font-weight:bold">[${ts}] To: ${esc(e.toEmail)} | Subject: ${esc(e.subject)}</span>`;
+            const bodyLines = esc(e.body).split('\n').join('<br>');
+            const sep     = `<span style="color:#555">${'─'.repeat(50)}</span>`;
+            return `${header}<br>${bodyLines}<br>${sep}`;
+        }).join('<br><br>');
+    }
+
+    // ── Format raw log lines array ────────────────────────────────────────────
+    function formatEmailLines(lines) {
+        return lines.map(l => {
+            const escaped = l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            if (l.startsWith('['))            return `<span style="color:#a8d8a8;font-weight:bold">${escaped}</span>`;
+            if (l.startsWith('-'.repeat(20))) return `<span style="color:#555">${escaped}</span>`;
+            return escaped;
+        }).join('<br>');
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function logout() { sessionStorage.removeItem('user'); window.location.replace('login.html'); }
+
+    // ── Approve / Reject attendance ───────────────────────────────────────────
+    let pendingParticipants = [];
+
+    async function loadPendingParticipants() {
+        const eid  = parseInt(document.getElementById('approve-event').value);
+        const box  = document.getElementById('pending-list');
+        const msg  = document.getElementById('approve-msg');
+        msg.textContent = ''; msg.className = 'msg';
+        box.innerHTML   = '';
+        if (!eid) return;
+
+        try {
+            const res = await fetch(`/api/participants/event/${eid}`, { headers: hdr });
+            if (!res.ok) { box.innerHTML = '<p style="color:#e74c3c">שגיאה בטעינת המשתתפים</p>'; return; }
+            const all = await res.json();
+            // Show only participants who have not yet responded (isAttending === null)
+            pendingParticipants = all.filter(p => p.isAttending === null || p.isAttending === undefined);
+
+            if (!pendingParticipants.length) {
+                box.innerHTML = '<p style="color:#27ae60;font-size:.86rem">✅ כל המשתתפים כבר הגיבו להזמנה.</p>';
+                return;
+            }
+
+            box.innerHTML = pendingParticipants.map(p => `
+                <div class="pending-row" id="row-${p.id}">
+                    <div>
+                        <div class="pname">${esc(p.name)}</div>
+                        <div class="pemail">${esc(p.email)}</div>
+                    </div>
+                    <div class="pending-actions">
+                        <button class="btn-approve" onclick="setAttendance(${p.id}, ${eid}, true)">✅ אשר הגעה</button>
+                        <button class="btn-reject"  onclick="setAttendance(${p.id}, ${eid}, false)">❌ דחה</button>
+                    </div>
+                </div>`).join('');
+        } catch {
+            box.innerHTML = '<p style="color:#e74c3c">שגיאת חיבור</p>';
+        }
+    }
+
+    async function setAttendance(participantId, eventId, attending) {
+        const msg = document.getElementById('approve-msg');
+        msg.textContent = ''; msg.className = 'msg';
+        const res = await fetch(`/api/participants/${participantId}/attendance?eventId=${eventId}`, {
+            method: 'PUT', headers: hdr,
+            body: JSON.stringify({ isAttending: attending, selectedPreferences: null })
+        });
+        if (res.ok) {
+            const row = document.getElementById(`row-${participantId}`);
+            if (row) {
+                const p = pendingParticipants.find(x => x.id === participantId);
+                row.innerHTML = `<div><div class="pname">${p ? esc(p.name) : participantId}</div></div>
+                    <div style="color:${attending ? '#1e8449' : '#c0392b'};font-weight:600">
+                        ${attending ? '✅ אושרה הגעה' : '❌ נדחה'}
+                    </div>`;
+                row.style.opacity = '0.65';
+            }
+            msg.className = 'msg ok';
+            msg.textContent = attending ? '✅ הגעה אושרה בהצלחה' : '❌ הגעה נדחתה';
+        } else {
+            const d = await res.json().catch(() => ({}));
+            msg.className = 'msg err';
+            msg.textContent = d.message || 'שגיאה בעדכון';
+        }
+    }
+
+    function esc_old_removed() { return ''; } // removed duplicate
+
+    loadActivity();
+    loadEmailLog();
+</script>
+</body>
+</html>

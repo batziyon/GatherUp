@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta charset="UTF-8"/><title>GatherUp</title></head>
+<body>
+<script>
+  // הדף הועבר ל-index.html — מנותב אוטומטית
+  const eventId = new URLSearchParams(window.location.search).get('eventId');
+  window.location.replace(eventId ? `index.html?eventId=${eventId}` : 'index.html');
+</script>
+</body>
+</html>
